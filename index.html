@@ -18,26 +18,14 @@
             padding: 20px;
         }
 
-.container {
-    max-width: 1600px;
-    margin: 0 auto;
-    background: white;
-    border-radius: 20px;
-    
-    /* 增強版：更多層陰影 + 邊框 */
-    box-shadow: 
-        0 20px 40px rgba(0,0,0,0.1),
-        0 8px 24px rgba(0,0,0,0.06),
-        0 2px 8px rgba(0,0,0,0.04),
-        inset 0 0 0 1px rgba(255,255,255,0.05);
-    
-    border: 1px solid rgba(255,255,255,0.01);
-    overflow: hidden;
-    
-    /* 渲染優化 */
-    transform: translateZ(0);
-    -webkit-font-smoothing: antialiased;
-}
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
 
         .header {
             background: linear-gradient(135deg, #2d4874 0%, #1a2e4a 100%);
@@ -1063,62 +1051,50 @@
         }
 
         // 載入預約資料
-        // 修改 loadBookings() 使用累積載入而不是覆蓋
-// 修改 loadBookings() 函數，使用固定的基準點而不是當前週
-async function loadBookings() {
-    if (!supabaseClient) {
-        showModal('未連接', '資料庫連線尚未建立');
-        return;
-    }
-    
-    try {
-        showLoading(true);
-        updateStatus('loading', '🔄 載入資料...');
-        
-        // 🔧 修正：使用今天所在週作為固定基準點，而不是 currentWeekStart
-        const todayWeekStart = getCurrentWeekStart(); // 固定基準
-        
-        // 計算查詢範圍（以今天所在週為中心，前後各擴大範圍）
-        const startDate = new Date(todayWeekStart);
-        startDate.setDate(startDate.getDate() - 30);    // 前30天（約4週）
-        const endDate = new Date(todayWeekStart);
-        endDate.setDate(endDate.getDate() + 150);        // 後150天（約21週）
-        
-        console.log('查詢範圍（固定基準）:', {
-            基準週: formatDate(todayWeekStart),
-            開始日期: formatDate(startDate),
-            結束日期: formatDate(endDate),
-            當前顯示週: formatDate(currentWeekStart)
-        });
-        
-        const { data, error } = await supabaseClient
-            .from('bookings')
-            .select('*')
-            .gte('date', formatDateForDB(startDate))
-            .lte('date', formatDateForDB(endDate))
-            .order('date', { ascending: true })
-            .order('start_time', { ascending: true });
-        
-        if (error) {
-            throw error;
+        async function loadBookings() {
+            if (!supabaseClient) {
+                showModal('未連接', '資料庫連線尚未建立');
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                updateStatus('loading', '🔄 載入資料...');
+                
+                // 計算查詢範圍（當前週的前後各一個月）
+                const startDate = new Date(currentWeekStart);
+                startDate.setDate(startDate.getDate() - 30);
+                const endDate = new Date(currentWeekStart);
+                endDate.setDate(endDate.getDate() + 37);
+                
+                const { data, error } = await supabaseClient
+                    .from('bookings')
+                    .select('*')
+                    .gte('date', formatDateForDB(startDate))
+                    .lte('date', formatDateForDB(endDate))
+                    .order('date', { ascending: true })
+                    .order('start_time', { ascending: true });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                // 格式化資料
+                bookings = data.map(formatBookingFromDB);
+                
+                updateSchedule();
+                updateStatus('connected', '✅ 已連接');
+                
+                console.log(`載入 ${bookings.length} 筆預約資料`);
+                
+            } catch (error) {
+                console.error('載入資料失敗:', error);
+                updateStatus('error', '❌ 載入失敗');
+                showModal('載入失敗', `無法載入預約資料: ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
         }
-        
-        // 格式化資料
-        bookings = data.map(formatBookingFromDB);
-        
-        updateSchedule();
-        updateStatus('connected', '✅ 已連接');
-        
-        console.log(`載入 ${bookings.length} 筆預約資料（固定範圍）`);
-        
-    } catch (error) {
-        console.error('載入資料失敗:', error);
-        updateStatus('error', '❌ 載入失敗');
-        showModal('載入失敗', `無法載入預約資料: ${error.message}`);
-    } finally {
-        showLoading(false);
-    }
-}
 
         // 新增預約
         async function saveBooking(booking) {
@@ -1407,8 +1383,8 @@ async function loadBookings() {
                 const dateStr = formatDate(date);
                 const dayBookings = bookings.filter(booking => booking.date === dateStr);
                 
-		const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
                 const shortDateDisplay = `${month}/${day}`;
                 
                 if (dayBookings.length === 0) {
@@ -1462,36 +1438,23 @@ async function loadBookings() {
         }
 
         function changeWeek(direction) {
-    // 計算新的週開始日期
-    const newWeekStart = new Date(currentWeekStart);
-    newWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
-    
-    // 計算與今天所在週的差距（以週為單位）
-    const weeksDiff = Math.round((newWeekStart - todayWeekStart) / (7 * 24 * 60 * 60 * 1000));
-    
-    // 檢查是否超出範圍：往前最多4週，往後最多20週
-    if (weeksDiff < -4 || weeksDiff > 20) {
-        console.log(`週數限制：目前差距 ${weeksDiff} 週，超出範圍 (-4 到 +20)`);
-        return; // 超出範圍，不執行切換
-    }
-    
-    // 在範圍內，執行切換
-    currentWeekStart = newWeekStart;
-    updateWeekDisplay();
-    updateTodayButtonState();
-    updateSchedule();
-    
-    // 如果切換到沒有資料的週，重新載入
-    const weekDates = getWeekDates(currentWeekStart);
-    const hasDataForWeek = weekDates.some(date => {
-        const dateStr = formatDate(date);
-        return bookings.some(booking => booking.date === dateStr);
-    });
-    
-    if (!hasDataForWeek && supabaseClient) {
-        loadBookings();
-    }
-}
+            currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+            updateWeekDisplay();
+            updateTodayButtonState();
+            updateSchedule();
+            
+            // 如果切換到沒有資料的週，重新載入
+            const weekDates = getWeekDates(currentWeekStart);
+            const hasDataForWeek = weekDates.some(date => {
+                const dateStr = formatDate(date);
+                return bookings.some(booking => booking.date === dateStr);
+            });
+            
+            if (!hasDataForWeek && supabaseClient) {
+                loadBookings();
+            }
+        }
+
         // 回到本週功能
         function goToToday() {
             currentWeekStart = new Date(todayWeekStart);
@@ -1748,42 +1711,29 @@ async function loadBookings() {
             }
         }
 
-        
-// 顯示週期刪除確認模態框
-function showRecurringDeleteModal(targetBooking, recurringInfo) {
-    const modal = document.getElementById('recurringDeleteModal');
-    const message = document.getElementById('recurringModalMessage');
-    
-    const futureCount = recurringInfo.futureBookings.length;
-    const intervalText = recurringInfo.intervalType === 'weekly' ? '每週' : '每月';
-    
-    // 找到最後一筆預約的日期
-    const lastBookingDate = recurringInfo.futureBookings[futureCount - 1]?.date;
-    let lastDateText = '';
-    
-    if (lastBookingDate) {
-        // 格式化最後預約日期為 YYYY年MM月DD日
-        const lastDate = new Date(lastBookingDate);
-        const year = lastDate.getFullYear();
-        const month = lastDate.getMonth() + 1;
-        const day = lastDate.getDate();
-        lastDateText = `<br>最後一筆預約日：<strong>${year}年${month}月${day}日</strong>`;
-    }
-    
-    message.innerHTML = `
-        偵測到這是${intervalText}重複行程。<br>
-        <strong>將影響 ${futureCount} 個預約</strong>${lastDateText}<br><br>
-        請選擇刪除範圍：
-    `;
-    
-    // 暫存刪除資訊
-    pendingDeleteBooking = {
-        targetBooking: targetBooking,
-        recurringInfo: recurringInfo
-    };
-    
-    modal.style.display = 'block';
-}
+        // 顯示週期刪除確認模態框
+        function showRecurringDeleteModal(targetBooking, recurringInfo) {
+            const modal = document.getElementById('recurringDeleteModal');
+            const message = document.getElementById('recurringModalMessage');
+            
+            const futureCount = recurringInfo.futureBookings.length;
+            const intervalText = recurringInfo.intervalType === 'weekly' ? '每週' : '每月';
+            
+            message.innerHTML = `
+                偵測到這是${intervalText}重複行程。<br>
+                <strong>將影響 ${futureCount} 個預約</strong><br><br>
+                請選擇刪除範圍：
+            `;
+            
+            // 暫存刪除資訊
+            pendingDeleteBooking = {
+                targetBooking: targetBooking,
+                recurringInfo: recurringInfo
+            };
+            
+            modal.style.display = 'block';
+        }
+
         // 確認週期刪除
         async function confirmRecurringDelete(type) {
             if (!pendingDeleteBooking) return;
@@ -2219,74 +2169,6 @@ function timeOverlap(start1, end1, start2, end2) {
     });
     
     return overlap;
-}
-
-// 重設表單函數 - 清空所有表單欄位並恢復預設狀態
-function resetForm() {
-    try {
-        console.log('開始重設表單...');
-        
-        // 清空基本欄位
-        const meetingTitle = document.getElementById('meetingTitle');
-        const meetingRoom = document.getElementById('meetingRoom');
-        const startTime = document.getElementById('startTime');
-        const endTime = document.getElementById('endTime');
-        const organizer = document.getElementById('organizer');
-        const meetingDate = document.getElementById('meetingDate');
-        const dateDisplay = document.getElementById('dateDisplay');
-        
-        if (meetingTitle) meetingTitle.value = '';
-        if (meetingRoom) meetingRoom.value = '';
-        if (startTime) startTime.value = '';
-        if (endTime) endTime.value = '';
-        if (organizer) organizer.value = '';
-        if (meetingDate) meetingDate.value = '';
-        if (dateDisplay) dateDisplay.textContent = '請選擇日期';
-        
-        // 重設週期預約選項
-        const recurringCheckbox = document.getElementById('recurringBooking');
-        const recurringOptions = document.getElementById('recurringOptions');
-        const recurringPeriod = document.getElementById('recurringPeriod');
-        const monthlyModeOption = document.getElementById('monthlyModeOption');
-        
-        if (recurringCheckbox) {
-            recurringCheckbox.checked = false;
-        }
-        
-        // 隱藏週期預約相關選項
-        if (recurringOptions) {
-            recurringOptions.style.display = 'none';
-        }
-        if (recurringPeriod) {
-            recurringPeriod.style.display = 'none';
-        }
-        if (monthlyModeOption) {
-            monthlyModeOption.style.display = 'none';
-        }
-        
-        // 重設週期預約的下拉選單為預設值
-        const recurringType = document.getElementById('recurringType');
-        const recurringWeeks = document.getElementById('recurringWeeks');
-        
-        if (recurringType) {
-            recurringType.value = 'weekly'; // 恢復預設值
-        }
-        if (recurringWeeks) {
-            recurringWeeks.value = '12'; // 恢復預設值
-        }
-        
-        // 清空模式說明文字
-        const modeExplanation = document.getElementById('modeExplanation');
-        if (modeExplanation) {
-            modeExplanation.textContent = '';
-        }
-        
-        console.log('表單重設完成');
-        
-    } catch (error) {
-        console.error('重設表單時發生錯誤:', error);
-        // 即使發生錯誤也不要讓整個流程中斷
-    }
 }
 
 // 預約提交函數 - 完整繁體中文版本

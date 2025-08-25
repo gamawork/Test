@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手機日期選擇器測試</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        /* 方案1：隱藏但保持可觸發 */
+        .date-container-v1 {
+            position: relative;
+        }
+
+        .date-display-v1 {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px; /* 防止iOS縮放 */
+            font-family: inherit;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .date-display-v1:focus {
+            outline: none;
+            border-color: #2d4874;
+            box-shadow: 0 0 0 3px rgba(45, 72, 116, 0.1);
+        }
+
+        .hidden-date-input-v1 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* 方案2：透明覆蓋 */
+        .date-container-v2 {
+            position: relative;
+        }
+
+        .date-display-v2 {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            background: white;
+            text-align: left;
+            pointer-events: none;
+        }
+
+        .transparent-date-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* 方案3：偽裝的真實輸入 */
+        .styled-date-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            background: white;
+            cursor: pointer;
+            
+            /* 隱藏預設日期選擇器圖標 */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .styled-date-input::-webkit-calendar-picker-indicator {
+            opacity: 0;
+            position: absolute;
+            right: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .styled-date-input:focus {
+            outline: none;
+            border-color: #2d4874;
+            box-shadow: 0 0 0 3px rgba(45, 72, 116, 0.1);
+        }
+
+        /* 自訂日期圖標 */
+        .date-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #666;
+        }
+
+        .test-result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .success { background: #d4edda; color: #155724; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+
+        .method-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #2d4874;
+        }
+
+        .method-description {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>手機端日期選擇器修復測試</h1>
+    <p>請在不同設備上測試以下三種方案：</p>
+
+    <div class="method-title">方案1：改進的隱藏輸入觸發</div>
+    <div class="method-description">
+        使用多重觸發機制，包含觸控事件和改進的元素定位
+    </div>
+    <div class="form-group">
+        <label for="date1">日期選擇 (方案1)</label>
+        <div class="date-container-v1">
+            <div class="date-display-v1" id="dateDisplay1" onclick="openDatePickerV1()" ontouchstart="openDatePickerV1()">
+                請選擇日期
+            </div>
+            <input type="date" id="date1" class="hidden-date-input-v1" onchange="updateDateDisplayV1()">
+        </div>
+    </div>
+
+    <div class="method-title">方案2：透明輸入覆蓋</div>
+    <div class="method-description">
+        使用透明的真實日期輸入覆蓋在顯示元素上
+    </div>
+    <div class="form-group">
+        <label for="date2">日期選擇 (方案2)</label>
+        <div class="date-container-v2">
+            <div class="date-display-v2" id="dateDisplay2">請選擇日期</div>
+            <input type="date" id="date2" class="transparent-date-input" onchange="updateDateDisplayV2()">
+        </div>
+    </div>
+
+    <div class="method-title">方案3：自訂樣式的真實輸入</div>
+    <div class="method-description">
+        直接使用日期輸入但完全自訂外觀
+    </div>
+    <div class="form-group">
+        <label for="date3">日期選擇 (方案3)</label>
+        <div style="position: relative;">
+            <input type="date" id="date3" class="styled-date-input" onchange="updateDateDisplayV3()" placeholder="請選擇日期">
+            <span class="date-icon">📅</span>
+        </div>
+    </div>
+
+    <div class="test-result info" id="testResult">
+        <strong>測試結果：</strong><br>
+        設備資訊將在這裡顯示...
+    </div>
+
+    <script>
+        // 設備檢測
+        function detectDevice() {
+            const userAgent = navigator.userAgent;
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+            const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+            const isAndroid = /Android/.test(userAgent);
+            const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+            
+            return {
+                isMobile,
+                isIOS,
+                isAndroid,
+                isSafari,
+                userAgent: userAgent.substring(0, 100) + '...'
+            };
+        }
+
+        // 顯示設備資訊
+        function displayDeviceInfo() {
+            const device = detectDevice();
+            const testResult = document.getElementById('testResult');
+            
+            testResult.innerHTML = `
+                <strong>設備檢測結果：</strong><br>
+                行動裝置: ${device.isMobile ? '是' : '否'}<br>
+                iOS: ${device.isIOS ? '是' : '否'}<br>
+                Android: ${device.isAndroid ? '是' : '否'}<br>
+                Safari: ${device.isSafari ? '是' : '否'}<br>
+                User Agent: ${device.userAgent}<br>
+                <br>
+                <strong>支援的 API：</strong><br>
+                showPicker(): ${HTMLInputElement.prototype.showPicker ? '支援' : '不支援'}<br>
+                Touch Events: ${'ontouchstart' in window ? '支援' : '不支援'}
+            `;
+        }
+
+        // 方案1：改進的隱藏輸入觸發
+        function openDatePickerV1() {
+            const dateInput = document.getElementById('date1');
+            
+            // 暫時讓元素可見和可交互
+            dateInput.style.position = 'absolute';
+            dateInput.style.opacity = '0.01'; // 幾乎透明但不完全隱藏
+            dateInput.style.pointerEvents = 'auto';
+            dateInput.style.zIndex = '9999';
+            dateInput.style.left = '0';
+            dateInput.style.top = '0';
+            dateInput.style.width = '100%';
+            dateInput.style.height = '100%';
+            
+            // 嘗試多種觸發方式
+            setTimeout(() => {
+                try {
+                    // 方法1: showPicker API (最新)
+                    if (dateInput.showPicker && typeof dateInput.showPicker === 'function') {
+                        console.log('嘗試 showPicker()');
+                        dateInput.showPicker();
+                    }
+                    // 方法2: focus + click 組合
+                    else {
+                        console.log('嘗試 focus + click');
+                        dateInput.focus();
+                        dateInput.click();
+                        
+                        // 方法3: 觸發 touch 事件 (行動裝置)
+                        if ('ontouchstart' in window) {
+                            const touchEvent = new TouchEvent('touchstart', {
+                                bubbles: true,
+                                cancelable: true
+                            });
+                            dateInput.dispatchEvent(touchEvent);
+                        }
+                    }
+                } catch (error) {
+                    console.error('日期選擇器觸發失敗:', error);
+                    // 最後手段：直接點擊
+                    dateInput.click();
+                }
+                
+                // 恢復隱藏狀態
+                setTimeout(() => {
+                    dateInput.style.position = '';
+                    dateInput.style.opacity = '';
+                    dateInput.style.pointerEvents = '';
+                    dateInput.style.zIndex = '';
+                }, 100);
+            }, 10);
+        }
+
+        function updateDateDisplayV1() {
+            const dateInput = document.getElementById('date1');
+            const dateDisplay = document.getElementById('dateDisplay1');
+            
+            if (dateInput.value) {
+                const date = new Date(dateInput.value);
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                dateDisplay.textContent = `${month}月${day}日`;
+                dateDisplay.style.color = '#000';
+            } else {
+                dateDisplay.textContent = '請選擇日期';
+                dateDisplay.style.color = '#999';
+            }
+            
+            console.log('方案1 - 日期已選擇:', dateInput.value);
+        }
+
+        // 方案2：透明輸入覆蓋
+        function updateDateDisplayV2() {
+            const dateInput = document.getElementById('date2');
+            const dateDisplay = document.getElementById('dateDisplay2');
+            
+            if (dateInput.value) {
+                const date = new Date(dateInput.value);
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                dateDisplay.textContent = `${month}月${day}日`;
+                dateDisplay.style.color = '#000';
+            } else {
+                dateDisplay.textContent = '請選擇日期';
+                dateDisplay.style.color = '#999';
+            }
+            
+            console.log('方案2 - 日期已選擇:', dateInput.value);
+        }
+
+        // 方案3：自訂樣式的真實輸入
+        function updateDateDisplayV3() {
+            const dateInput = document.getElementById('date3');
+            console.log('方案3 - 日期已選擇:', dateInput.value);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            displayDeviceInfo();
+            
+            // 方案1 事件監聽
+            const dateDisplay1 = document.getElementById('dateDisplay1');
+            dateDisplay1.addEventListener('touchstart', function(e) {
+                e.preventDefault(); // 防止雙重觸發
+                openDatePickerV1();
+            }, { passive: false });
+            
+            // 阻止方案2的點擊事件冒泡
+            document.getElementById('date2').addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            console.log('所有事件監聽器已設定完成');
+        });
+
+        // 全域錯誤處理
+        window.addEventListener('error', function(e) {
+            console.error('全域錯誤:', e.error);
+        });
+    </script>
+</body>
+</html>

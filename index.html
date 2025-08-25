@@ -18,14 +18,26 @@
             padding: 20px;
         }
 
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
+.container {
+    max-width: 1600px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    
+    /* 增強版：更多層陰影 + 邊框 */
+    box-shadow: 
+        0 20px 40px rgba(0,0,0,0.1),
+        0 8px 24px rgba(0,0,0,0.06),
+        0 2px 8px rgba(0,0,0,0.04),
+        inset 0 0 0 1px rgba(255,255,255,0.05);
+    
+    border: 1px solid rgba(255,255,255,0.01);
+    overflow: hidden;
+    
+    /* 渲染優化 */
+    transform: translateZ(0);
+    -webkit-font-smoothing: antialiased;
+}
 
         .header {
             background: linear-gradient(135deg, #2d4874 0%, #1a2e4a 100%);
@@ -112,21 +124,40 @@
             padding: 12px;
             border: 2px solid #e2e8f0;
             border-radius: 10px;
-            font-size: 14px;
+            font-size: 16px; /* 重要：防止手機縮放 */
             transition: all 0.3s ease;
             font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        /* 改進的日期選擇器樣式 */
+        .date-picker-container {
+            position: relative;
+            width: 100%;
         }
 
         .date-display {
             width: 100%;
-            padding: 12px;
+            padding: 12px 40px 12px 12px;
             border: 2px solid #e2e8f0;
             border-radius: 10px;
-            font-size: 14px;
+            font-size: 16px; /* 重要：防止手機縮放 */
             font-family: inherit;
             background: white;
             cursor: pointer;
             text-align: left;
+            color: #2d3748;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            
+            /* 手機優化 */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .date-display:focus {
@@ -135,8 +166,42 @@
             box-shadow: 0 0 0 3px rgba(45, 72, 116, 0.1);
         }
 
+        .date-display:hover {
+            border-color: #2d4874;
+        }
+
+        .date-display.has-value {
+            color: #1a202c;
+            font-weight: 500;
+        }
+
+        .date-display.placeholder {
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        .date-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            pointer-events: none;
+            font-size: 18px;
+        }
+
         .hidden-input {
-            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            font-size: 16px; /* 重要：防止手機縮放 */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
 
         .form-group select:focus,
@@ -172,7 +237,7 @@
             padding: 12px 24px;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
             transition: all 0.3s ease;
             width: 100%;
@@ -315,35 +380,71 @@
             color: #2d3748;
         }
 
-        .room-cell {
-            background: #fef5e7;
+        /* 移除原本的固定背景色 */
+        .time-cell {
             font-weight: 600;
             color: #2d3748;
         }
 
-        .time-cell {
-            background: #fef5e7;
+        .room-cell {
             font-weight: 600;
             color: #2d3748;
         }
 
         .organizer-cell {
-            background: #fef5e7;
             font-weight: 600;
             color: #2d3748;
         }
 
         .meeting-cell {
-            background: #fef5e7;
             color: #1f2937;
             cursor: pointer;
             transition: all 0.3s ease;
             min-height: 40px;
         }
 
+        .action-cell {
+            padding: 8px;
+        }
+
         .meeting-cell:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(254, 245, 231, 0.5);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 交錯顏色樣式 - 偶數行（黃色，跟原本時間欄位一樣） */
+        .row-even .time-cell,
+        .row-even .room-cell,
+        .row-even .organizer-cell,
+        .row-even .meeting-cell,
+        .row-even .action-cell {
+            background: #fef5e7; /* 跟原本時間欄位一樣的黃色 */
+        }
+
+        /* 交錯顏色樣式 - 奇數行（淡藍色） */
+        .row-odd .time-cell,
+        .row-odd .room-cell,
+        .row-odd .organizer-cell,
+        .row-odd .meeting-cell,
+        .row-odd .action-cell {
+            background: #dbeafe; /* 淡藍色 */
+        }
+
+        /* Hover 效果 */
+        .row-even .time-cell:hover,
+        .row-even .room-cell:hover,
+        .row-even .organizer-cell:hover,
+        .row-even .meeting-cell:hover,
+        .row-even .action-cell:hover {
+            background: #fed7aa; /* 較深的黃色 */
+        }
+
+        .row-odd .time-cell:hover,
+        .row-odd .room-cell:hover,
+        .row-odd .organizer-cell:hover,
+        .row-odd .meeting-cell:hover,
+        .row-odd .action-cell:hover {
+            background: #bfdbfe; /* 較深的藍色 */
         }
 
         .meeting-title {
@@ -367,11 +468,6 @@
             color: #2d4874;
         }
 
-        .action-cell {
-            background: #fef5e7;
-            padding: 8px;
-        }
-
         .empty-action-cell {
             background: #f8f9fa;
             padding: 8px;
@@ -385,21 +481,22 @@
         .calendar-menu {
             position: absolute;
             top: 100%;
-            left: 0;
+            right: 0;
             background: white;
             border: 1px solid #ddd;
             border-radius: 5px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 1000;
-            min-width: 120px;
+            min-width: 160px;
             display: none;
+            white-space: nowrap;
         }
 
         .calendar-menu::before {
             content: '';
             position: absolute;
             top: -8px;
-            left: 15px;
+            right: 15px;
             width: 0;
             height: 0;
             border-left: 8px solid transparent;
@@ -411,7 +508,7 @@
             content: '';
             position: absolute;
             top: -7px;
-            left: 15px;
+            right: 15px;
             width: 0;
             height: 0;
             border-left: 8px solid transparent;
@@ -491,6 +588,7 @@
             display: flex;
             gap: 5px;
             align-items: center;
+            justify-content: center;
         }
 
         .legend {
@@ -528,11 +626,62 @@
         .available { background: #f8f9fa; }
         .booked-legend { background: linear-gradient(135deg, #b3c5e8 0%, #8db0e6 100%); }
 
-        .loading {
+        /* 修正載入遮罩樣式 */
+        .table-container {
+            position: relative;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
             display: none;
-            text-align: center;
-            padding: 20px;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(3px);
+            border-radius: 15px;
+        }
+
+        .loading-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 40px;
+            background: transparent;
+            border-radius: 15px;
+            box-shadow: none;
+            border: none;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e3f2fd;
+            border-top: 4px solid #2d4874;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 16px;
+            font-weight: 600;
             color: #2d4874;
+            text-align: center;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 移除或隱藏原本的 loading 樣式 */
+        .loading {
+            display: none !important;
         }
 
         @media (max-width: 1024px) {
@@ -547,6 +696,42 @@
 
             .schedule-area {
                 padding: 20px;
+            }
+        }
+
+        /* 手機響應式優化 */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .sidebar {
+                padding: 20px 15px;
+            }
+            
+            .booking-form {
+                padding: 15px;
+            }
+            
+            .schedule-area {
+                padding: 15px;
+            }
+            
+            .current-week {
+                font-size: 1rem;
+                min-width: auto;
             }
         }
 
@@ -700,14 +885,12 @@
 
         ::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(135deg, #94a3b8, #64748b);
-        }
-    </style>
+        }    </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>Gama 會議室預約系統</h1>
-            <p>Conference Room Booking System - Powered by Supabase</p>
         </div>
 
         <div class="main-content">
@@ -717,8 +900,11 @@
                     <div id="bookingForm">
                         <div class="form-group">
                             <label for="meetingDate">日期</label>
-                            <div class="date-display" id="dateDisplay" onclick="openDatePicker()">請選擇日期</div>
-                            <input type="date" id="meetingDate" class="hidden-input" onchange="updateDateDisplay()">
+                            <div class="date-picker-container">
+                                <div class="date-display placeholder" id="dateDisplay">請點擊選擇日期</div>
+                                <div class="date-icon">📅</div>
+                                <input type="date" id="meetingDate" class="hidden-input">
+                            </div>
                         </div>
                         
                         <div class="form-group">
@@ -767,10 +953,11 @@
                         
                         <div class="form-group" id="recurringOptions" style="display: none;">
                             <label for="recurringType">重複頻率</label>
-                            <select id="recurringType">
-                                <option value="weekly">每週</option>
-                                <option value="monthly">每月 (每月第幾個週幾)</option>
-                            </select>
+				<select id="recurringType">
+   				 <option value="weekly">每週</option>
+   				 <option value="biweekly">每雙週</option>
+    					<option value="monthly">每月 (每月第幾個週幾)</option>
+				</select>
                         </div>
                         
                         <div class="form-group" id="monthlyModeOption" style="display: none;">
@@ -793,32 +980,39 @@
 
             <div class="schedule-area">
                 <div class="schedule-header">
-                    <div class="date-nav">
+                                            <div class="date-nav">
                         <button onclick="changeWeek(-1)">◀</button>
-                        <div class="current-week" id="currentWeek">載入中...</div>
+                        <div class="current-week" id="currentWeek">本週</div>
                         <button onclick="changeWeek(1)">▶</button>
                         <button class="today-btn" id="todayBtn" onclick="goToToday()">回到本週</button>
                     </div>
                 </div>
 
-                <div class="loading" id="loading">載入中...</div>
+                <div class="table-container" style="position: relative;">
+                    <div class="loading-overlay" id="loadingOverlay">
+                        <div class="loading-content">
+                            <div class="loading-spinner"></div>
+                            <div class="loading-text">載入中...</div>
+                        </div>
+                    </div>
 
-                <table class="schedule-table">
-                    <thead>
-                        <tr>
-                            <th width="60">日期</th>
-                            <th width="60">星期</th>
-                            <th width="120">時間</th>
-                            <th width="100">會議地點</th>
-                            <th width="80">登記者</th>
-                            <th width="410">會議主題</th>
-                            <th width="130">動作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="scheduleBody">
-                        <!-- 動態生成內容 -->
-                    </tbody>
-                </table>
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th width="60">日期</th>
+                                <th width="60">星期</th>
+                                <th width="120">時間</th>
+                                <th width="100">會議地點</th>
+                                <th width="80">登記者</th>
+                                <th width="390">會議主題</th>
+                                <th width="150">動作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleBody">
+                            <!-- 動態生成內容 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -869,6 +1063,17 @@
         let supabaseClient = null;
         let realtimeSubscription = null;
         let pendingDeleteBooking = null; // 暫存待刪除的預約資訊
+
+        // 設備檢測
+        function detectDevice() {
+            const userAgent = navigator.userAgent;
+            return {
+                isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent),
+                isIOS: /iPad|iPhone|iPod/.test(userAgent),
+                isAndroid: /Android/.test(userAgent),
+                touchSupport: 'ontouchstart' in window
+            };
+        }
 
         // 計算當前週的週一日期
         function getCurrentWeekStart() {
@@ -992,50 +1197,60 @@
         }
 
         // 載入預約資料
-        async function loadBookings() {
-            if (!supabaseClient) {
-                showModal('未連接', '資料庫連線尚未建立');
-                return;
-            }
-            
-            try {
-                showLoading(true);
-                updateStatus('loading', '🔄 載入資料...');
-                
-                // 計算查詢範圍（當前週的前後各一個月）
-                const startDate = new Date(currentWeekStart);
-                startDate.setDate(startDate.getDate() - 30);
-                const endDate = new Date(currentWeekStart);
-                endDate.setDate(endDate.getDate() + 37);
-                
-                const { data, error } = await supabaseClient
-                    .from('bookings')
-                    .select('*')
-                    .gte('date', formatDateForDB(startDate))
-                    .lte('date', formatDateForDB(endDate))
-                    .order('date', { ascending: true })
-                    .order('start_time', { ascending: true });
-                
-                if (error) {
-                    throw error;
-                }
-                
-                // 格式化資料
-                bookings = data.map(formatBookingFromDB);
-                
-                updateSchedule();
-                updateStatus('connected', '✅ 已連接');
-                
-                console.log(`載入 ${bookings.length} 筆預約資料`);
-                
-            } catch (error) {
-                console.error('載入資料失敗:', error);
-                updateStatus('error', '❌ 載入失敗');
-                showModal('載入失敗', `無法載入預約資料: ${error.message}`);
-            } finally {
-                showLoading(false);
-            }
+async function loadBookings() {
+    if (!supabaseClient) {
+        showModal('未連接', '資料庫連線尚未建立');
+        return;
+    }
+    
+    try {
+        showLoading(true);
+        updateStatus('loading', '🔄 載入資料...');
+        
+        // 🔧 修正：使用今天所在週作為固定基準點，而不是 currentWeekStart
+        const todayWeekStart = getCurrentWeekStart(); // 固定基準
+        
+        // 計算查詢範圍（以今天所在週為中心，前後各擴大範圍）
+        const startDate = new Date(todayWeekStart);
+        startDate.setDate(startDate.getDate() - 30);    // 前30天（約4週）
+        const endDate = new Date(todayWeekStart);
+        endDate.setDate(endDate.getDate() + 150);        // 後150天（約21週）
+        
+        console.log('查詢範圍（固定基準）:', {
+            基準週: formatDate(todayWeekStart),
+            開始日期: formatDate(startDate),
+            結束日期: formatDate(endDate),
+            當前顯示週: formatDate(currentWeekStart)
+        });
+        
+        const { data, error } = await supabaseClient
+            .from('bookings')
+            .select('*')
+            .gte('date', formatDateForDB(startDate))
+            .lte('date', formatDateForDB(endDate))
+            .order('date', { ascending: true })
+            .order('start_time', { ascending: true });
+        
+        if (error) {
+            throw error;
         }
+        
+        // 格式化資料
+        bookings = data.map(formatBookingFromDB);
+        
+        updateSchedule();
+        updateStatus('connected', '✅ 已連接');
+        
+        console.log(`載入 ${bookings.length} 筆預約資料（固定範圍）`);
+        
+    } catch (error) {
+        console.error('載入資料失敗:', error);
+        updateStatus('error', '❌ 載入失敗');
+        showModal('載入失敗', `無法載入預約資料: ${error.message}`);
+    } finally {
+        showLoading(false);
+    }
+}
 
         // 新增預約
         async function saveBooking(booking) {
@@ -1120,71 +1335,96 @@
         }
 
         // 動態更新持續期間選項
-        function updateRecurringPeriodOptions() {
-            const recurringType = document.getElementById('recurringType').value;
-            const recurringWeeksSelect = document.getElementById('recurringWeeks');
-            const monthlyModeOption = document.getElementById('monthlyModeOption');
-            
-            // 清空現有選項
-            recurringWeeksSelect.innerHTML = '';
-            
-            if (recurringType === 'weekly') {
-                // 隱藏月模式選項
-                monthlyModeOption.style.display = 'none';
-                
-                // 每週重複的選項
-                const weeklyOptions = [
-                    { value: 2, text: '2週' },
-                    { value: 3, text: '3週' },
-                    { value: 4, text: '4週' },
-                    { value: 6, text: '6週' },
-                    { value: 8, text: '8週' },
-                    { value: 12, text: '12週（3個月）' },
-                    { value: 24, text: '24週（6個月）' },
-                    { value: 52, text: '52週（1年）' },
-                    { value: 156, text: '156週（3年）' }
-                ];
-                
-                weeklyOptions.forEach(option => {
-                    const optionElement = document.createElement('option');
-                    optionElement.value = option.value;
-                    optionElement.textContent = option.text;
-                    recurringWeeksSelect.appendChild(optionElement);
-                });
-                
-                // 預設選擇12週
-                recurringWeeksSelect.value = '12';
-                
-            } else if (recurringType === 'monthly') {
-                // 顯示月模式選項
-                monthlyModeOption.style.display = 'block';
-                updateModeExplanation(); // 更新說明文字
-                
-                // 每月重複的選項 (內部仍使用週數計算)
-                const monthlyOptions = [
-                    { value: 9, text: '2個月' },        // 約9週
-                    { value: 13, text: '3個月' },       // 約13週
-                    { value: 26, text: '6個月' },       // 約26週
-                    { value: 52, text: '12個月（1年）' }, // 52週
-                    { value: 104, text: '24個月（2年）' }, // 104週
-                    { value: 156, text: '36個月（3年）' }  // 156週
-                ];
-                
-                monthlyOptions.forEach(option => {
-                    const optionElement = document.createElement('option');
-                    optionElement.value = option.value;
-                    optionElement.textContent = option.text;
-                    recurringWeeksSelect.appendChild(optionElement);
-                });
-                
-                // 預設選擇12個月
-                recurringWeeksSelect.value = '52';
-            }
-            
-            console.log(`持續期間選項已更新為：${recurringType}`);
-        }
-
-        // 更新模式說明文字
+function updateRecurringPeriodOptions() {
+    const recurringType = document.getElementById('recurringType').value;
+    const recurringWeeksSelect = document.getElementById('recurringWeeks');
+    const monthlyModeOption = document.getElementById('monthlyModeOption');
+    
+    // 清空現有選項
+    recurringWeeksSelect.innerHTML = '';
+    
+    if (recurringType === 'weekly') {
+        // 隱藏月模式選項
+        monthlyModeOption.style.display = 'none';
+        
+        // 每週重複的選項
+        const weeklyOptions = [
+            { value: 2, text: '2週' },
+            { value: 3, text: '3週' },
+            { value: 4, text: '4週' },
+            { value: 6, text: '6週' },
+            { value: 8, text: '8週' },
+            { value: 12, text: '12週（3個月）' },
+            { value: 24, text: '24週（6個月）' },
+            { value: 52, text: '52週（1年）' },
+            { value: 156, text: '156週（3年）' }
+        ];
+        
+        weeklyOptions.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.textContent = option.text;
+            recurringWeeksSelect.appendChild(optionElement);
+        });
+        
+        // 預設選擇12週
+        recurringWeeksSelect.value = '12';
+        
+    } else if (recurringType === 'biweekly') {
+        // 隱藏月模式選項
+        monthlyModeOption.style.display = 'none';
+        
+        // 每雙週重複的選項
+        const biweeklyOptions = [
+            { value: 4, text: '4週' },
+            { value: 6, text: '6週' },
+            { value: 8, text: '8週' },
+            { value: 10, text: '10週' },
+            { value: 12, text: '12週' },
+            { value: 26, text: '6個月（半年）' },
+            { value: 52, text: '12個月（1年）' },
+            { value: 156, text: '36個月（3年）' }
+        ];
+        
+        biweeklyOptions.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.textContent = option.text;
+            recurringWeeksSelect.appendChild(optionElement);
+        });
+        
+        // 預設選擇12週
+        recurringWeeksSelect.value = '12';
+        
+    } else if (recurringType === 'monthly') {
+        // 顯示月模式選項
+        monthlyModeOption.style.display = 'block';
+        updateModeExplanation(); // 更新說明文字
+        
+        // 每月重複的選項 (內部仍使用週數計算)
+        const monthlyOptions = [
+            { value: 9, text: '2個月' },        // 約9週
+            { value: 13, text: '3個月' },       // 約13週
+            { value: 26, text: '6個月' },       // 約26週
+            { value: 52, text: '12個月（1年）' }, // 52週
+            { value: 104, text: '24個月（2年）' }, // 104週
+            { value: 156, text: '36個月（3年）' }  // 156週
+        ];
+        
+        monthlyOptions.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.textContent = option.text;
+            recurringWeeksSelect.appendChild(optionElement);
+        });
+        
+        // 預設選擇12個月
+        recurringWeeksSelect.value = '52';
+    }
+    
+    console.log(`持續期間選項已更新為：${recurringType}`);
+}
+// 更新模式說明文字
         function updateModeExplanation() {
             const dateInput = document.getElementById('meetingDate');
             const explanation = document.getElementById('modeExplanation');
@@ -1324,8 +1564,8 @@
                 const dateStr = formatDate(date);
                 const dayBookings = bookings.filter(booking => booking.date === dateStr);
                 
-                const month = date.getMonth() + 1;
-                const day = date.getDate();
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
                 const shortDateDisplay = `${month}/${day}`;
                 
                 if (dayBookings.length === 0) {
@@ -1334,7 +1574,7 @@
                         <td class="date-cell">${shortDateDisplay}</td>
                         <td class="day-cell">${getDayName(date)}</td>
                         <td class="empty-cell" colspan="4" onclick="quickBook('${dateStr}')">
-                            點擊快速預約
+                            點選此處 帶入預約日期
                         </td>
                         <td class="empty-action-cell"></td>
                     `;
@@ -1342,60 +1582,79 @@
                 } else {
                     dayBookings.sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
                     
-                    dayBookings.forEach((booking, index) => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            ${index === 0 ? `<td rowspan="${dayBookings.length}" class="date-cell">${shortDateDisplay}</td>` : ''}
-                            ${index === 0 ? `<td rowspan="${dayBookings.length}" class="day-cell">${getDayName(date)}</td>` : ''}
-                            <td class="time-cell">${formatTimeDisplay(booking.startTime)}-${formatTimeDisplay(booking.endTime)}</td>
-                            <td class="room-cell">${booking.room || '未知'}</td>
-                            <td class="organizer-cell">${booking.organizer || '未知'}</td>
-                            <td class="meeting-cell" onclick="showMeetingDetails('${booking.title}', '${booking.organizer}', '${booking.startTime}-${booking.endTime}', '${booking.room}', '${dateStr}')">
-                                <div class="meeting-title">${booking.title || '無標題'}</div>
-                            </td>
-                            <td class="action-cell">
-                                <div class="action-buttons">
-                                    <div class="calendar-dropdown">
-                                        <button class="calendar-btn-dropdown" onclick="toggleCalendarMenu(event, '${booking.id}')">
-                                            日曆 ▼
-                                        </button>
-                                        <div class="calendar-menu" id="menu-${booking.id}">
-                                            <div class="calendar-option" onclick="addToGoogleCalendar('${booking.id}')">
-                                                Google 日曆
-                                            </div>
-                                            <div class="calendar-option" onclick="addToAppleCalendar('${booking.id}')">
-                                                Apple & Outlook 日曆
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button class="delete-btn" onclick="deleteBooking('${booking.id}', event)">刪除</button>
-                                </div>
-                            </td>
-                        `;
-                        scheduleBody.appendChild(row);
-                    });
+		dayBookings.forEach((booking, index) => {
+    const row = document.createElement('tr');
+    // 計算全域行數來決定顏色（跨日期交錯）
+    const globalRowIndex = scheduleBody.children.length;
+    const colorClass = globalRowIndex % 2 === 0 ? 'row-even' : 'row-odd';
+    
+    row.className = colorClass; // 為整行設定 class
+    
+    row.innerHTML = `
+        ${index === 0 ? `<td rowspan="${dayBookings.length}" class="date-cell">${shortDateDisplay}</td>` : ''}
+        ${index === 0 ? `<td rowspan="${dayBookings.length}" class="day-cell">${getDayName(date)}</td>` : ''}
+        <td class="time-cell">${formatTimeDisplay(booking.startTime)}-${formatTimeDisplay(booking.endTime)}</td>
+        <td class="room-cell">${booking.room || '未知'}</td>
+        <td class="organizer-cell">${booking.organizer || '未知'}</td>
+        <td class="meeting-cell" onclick="showMeetingDetails('${booking.title}', '${booking.organizer}', '${booking.startTime}-${booking.endTime}', '${booking.room}', '${dateStr}')">
+            <div class="meeting-title">${booking.title || '無標題'}</div>
+        </td>
+        <td class="action-cell">
+            <div class="action-buttons">
+                <div class="calendar-dropdown">
+                    <button class="calendar-btn-dropdown" onclick="toggleCalendarMenu(event, '${booking.id}')">
+                        日曆 ▼
+                    </button>
+                    <div class="calendar-menu" id="menu-${booking.id}">
+                        <div class="calendar-option" onclick="addToGoogleCalendar('${booking.id}')">
+                            Google 日曆
+                        </div>
+                        <div class="calendar-option" onclick="addToAppleCalendar('${booking.id}')">
+                            Apple & Outlook 日曆
+                        </div>
+                    </div>
+                </div>
+                <button class="delete-btn" onclick="deleteBooking('${booking.id}', event)">刪除</button>
+            </div>
+        </td>
+    `;
+    scheduleBody.appendChild(row);
+});
                 }
             });
         }
 
         function changeWeek(direction) {
-            currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
-            updateWeekDisplay();
-            updateTodayButtonState();
-            updateSchedule();
-            
-            // 如果切換到沒有資料的週，重新載入
-            const weekDates = getWeekDates(currentWeekStart);
-            const hasDataForWeek = weekDates.some(date => {
-                const dateStr = formatDate(date);
-                return bookings.some(booking => booking.date === dateStr);
-            });
-            
-            if (!hasDataForWeek && supabaseClient) {
-                loadBookings();
-            }
-        }
-
+    // 計算新的週開始日期
+    const newWeekStart = new Date(currentWeekStart);
+    newWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+    
+    // 計算與今天所在週的差距（以週為單位）
+    const weeksDiff = Math.round((newWeekStart - todayWeekStart) / (7 * 24 * 60 * 60 * 1000));
+    
+    // 檢查是否超出範圍：往前最多4週，往後最多20週
+    if (weeksDiff < -4 || weeksDiff > 20) {
+        console.log(`週數限制：目前差距 ${weeksDiff} 週，超出範圍 (-4 到 +20)`);
+        return; // 超出範圍，不執行切換
+    }
+    
+    // 在範圍內，執行切換
+    currentWeekStart = newWeekStart;
+    updateWeekDisplay();
+    updateTodayButtonState();
+    updateSchedule();
+    
+    // 如果切換到沒有資料的週，重新載入
+    const weekDates = getWeekDates(currentWeekStart);
+    const hasDataForWeek = weekDates.some(date => {
+        const dateStr = formatDate(date);
+        return bookings.some(booking => booking.date === dateStr);
+    });
+    
+    if (!hasDataForWeek && supabaseClient) {
+        loadBookings();
+    }
+}
         // 回到本週功能
         function goToToday() {
             currentWeekStart = new Date(todayWeekStart);
@@ -1426,6 +1685,7 @@
             }
         }
 
+        // 更新週別顯示
         function updateWeekDisplay() {
             const year = currentWeekStart.getFullYear();
             const startMonth = currentWeekStart.getMonth() + 1;
@@ -1452,40 +1712,109 @@
             updateTodayButtonState();
         }
 
-        // 表單處理函數
-        function openDatePicker() {
-            const dateInput = document.getElementById('meetingDate');
+        // 改進的日期格式化函數
+        function formatDateDisplay(dateString) {
+            if (!dateString) return '請點擊選擇日期';
+            
             try {
-                if (dateInput.showPicker) {
-                    dateInput.showPicker();
-                } else {
-                    dateInput.click();
-                    dateInput.focus();
-                }
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return '請點擊選擇日期';
+                
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                const dayNames = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+                const dayName = dayNames[date.getDay()];
+                
+                return `${year}年${month}月${day}日 (${dayName})`;
             } catch (error) {
-                dateInput.click();
-                dateInput.focus();
+                console.error('日期格式化錯誤:', error);
+                return '請點擊選擇日期';
             }
         }
 
-        function formatDateDisplay(dateString) {
-            if (!dateString) return '請選擇日期';
-            const date = new Date(dateString);
-            const month = date.getMonth() + 1;
-            const day = date.getDate();
-            return `${month}月${day}日`;
-        }
-
+        // 改進的日期更新函數
         function updateDateDisplay() {
             const dateInput = document.getElementById('meetingDate');
             const dateDisplay = document.getElementById('dateDisplay');
-            dateDisplay.textContent = formatDateDisplay(dateInput.value);
+            
+            if (!dateInput || !dateDisplay) return;
+            
+            const formattedDate = formatDateDisplay(dateInput.value);
+            dateDisplay.textContent = formattedDate;
+            
+            // 更新樣式
+            if (dateInput.value) {
+                dateDisplay.classList.remove('placeholder');
+                dateDisplay.classList.add('has-value');
+            } else {
+                dateDisplay.classList.add('placeholder');
+                dateDisplay.classList.remove('has-value');
+            }
+            
+            // 如果是月模式且已勾選週期預約，更新說明
+            const recurringType = document.getElementById('recurringType');
+            const recurringCheckbox = document.getElementById('recurringBooking');
+            if (recurringType && recurringCheckbox && 
+                recurringType.value === 'monthly' && recurringCheckbox.checked) {
+                updateModeExplanation();
+            }
+            
+            console.log('日期已更新:', dateInput.value, '->', formattedDate);
+        }
+
+        // 改進的日期選擇器開啟函數
+        function openDatePicker() {
+            const dateInput = document.getElementById('meetingDate');
+            if (!dateInput) return;
+            
+            const device = detectDevice();
+            console.log('開啟日期選擇器, 設備:', device);
+            
+            try {
+                // 方法1: showPicker (支援的瀏覽器)
+                if (dateInput.showPicker) {
+                    console.log('使用 showPicker');
+                    dateInput.showPicker();
+                    return;
+                }
+            } catch (error) {
+                console.log('showPicker 失敗:', error.message);
+            }
+            
+            try {
+                // 方法2: 程式化點擊
+                console.log('使用程式化點擊');
+                dateInput.focus();
+                dateInput.click();
+                
+                // 手機額外處理
+                if (device.isMobile) {
+                    setTimeout(() => {
+                        dateInput.focus();
+                        if (device.isIOS) {
+                            // iOS 特殊處理
+                            const event = new Event('click', { bubbles: true });
+                            dateInput.dispatchEvent(event);
+                        }
+                    }, 50);
+                }
+            } catch (error) {
+                console.log('程式化點擊失敗:', error.message);
+            }
         }
 
         function quickBook(date) {
-            document.getElementById('meetingDate').value = date;
-            document.getElementById('dateDisplay').textContent = formatDateDisplay(date);
-            document.getElementById('meetingTitle').focus();
+            const dateInput = document.getElementById('meetingDate');
+            const dateDisplay = document.getElementById('dateDisplay');
+            
+            if (dateInput) dateInput.value = date;
+            if (dateDisplay) {
+                updateDateDisplay(); // 使用改進的更新函數
+            }
+            
+            const titleInput = document.getElementById('meetingTitle');
+            if (titleInput) titleInput.focus();
         }
 
         function showMeetingDetails(title, organizer, time, room, date) {
@@ -1651,29 +1980,42 @@
             }
         }
 
-        // 顯示週期刪除確認模態框
-        function showRecurringDeleteModal(targetBooking, recurringInfo) {
-            const modal = document.getElementById('recurringDeleteModal');
-            const message = document.getElementById('recurringModalMessage');
-            
-            const futureCount = recurringInfo.futureBookings.length;
-            const intervalText = recurringInfo.intervalType === 'weekly' ? '每週' : '每月';
-            
-            message.innerHTML = `
-                偵測到這是${intervalText}重複行程。<br>
-                <strong>將影響 ${futureCount} 個預約</strong><br><br>
-                請選擇刪除範圍：
-            `;
-            
-            // 暫存刪除資訊
-            pendingDeleteBooking = {
-                targetBooking: targetBooking,
-                recurringInfo: recurringInfo
-            };
-            
-            modal.style.display = 'block';
-        }
-
+        
+// 顯示週期刪除確認模態框
+function showRecurringDeleteModal(targetBooking, recurringInfo) {
+    const modal = document.getElementById('recurringDeleteModal');
+    const message = document.getElementById('recurringModalMessage');
+    
+    const futureCount = recurringInfo.futureBookings.length;
+    const intervalText = recurringInfo.intervalType === 'weekly' ? '每週' : '每月';
+    
+    // 找到最後一筆預約的日期
+    const lastBookingDate = recurringInfo.futureBookings[futureCount - 1]?.date;
+    let lastDateText = '';
+    
+    if (lastBookingDate) {
+        // 格式化最後預約日期為 YYYY年MM月DD日
+        const lastDate = new Date(lastBookingDate);
+        const year = lastDate.getFullYear();
+        const month = lastDate.getMonth() + 1;
+        const day = lastDate.getDate();
+        lastDateText = `<br>最後一筆預約日：<strong>${year}年${month}月${day}日</strong>`;
+    }
+    
+    message.innerHTML = `
+        偵測到這是${intervalText}重複行程。<br>
+        <strong>將影響 ${futureCount} 個預約</strong>${lastDateText}<br><br>
+        請選擇刪除範圍：
+    `;
+    
+    // 暫存刪除資訊
+    pendingDeleteBooking = {
+        targetBooking: targetBooking,
+        recurringInfo: recurringInfo
+    };
+    
+    modal.style.display = 'block';
+}
         // 確認週期刪除
         async function confirmRecurringDelete(type) {
             if (!pendingDeleteBooking) return;
@@ -1844,18 +2186,6 @@ END:VCALENDAR`;
             }
         }
 
-        // 階段2：設備偵測
-        function detectDevice() {
-            const userAgent = navigator.userAgent;
-            return {
-                isIOS: /iPad|iPhone|iPod/.test(userAgent),
-                isMac: /Macintosh/.test(userAgent),
-                isAndroid: /Android/.test(userAgent),
-                isWindows: /Windows/.test(userAgent),
-                isAppleDevice: /iPad|iPhone|iPod|Macintosh/.test(userAgent)
-            };
-        }
-
         // 階段2：智慧提示訊息
         function showSmartNotification(message, type = 'info', duration = 3000) {
             const notification = document.createElement('div');
@@ -2017,7 +2347,7 @@ END:VCALENDAR`;
                 downloadICS(icsContent, filename);
                 
                 // 顯示智慧提示
-                if (device.isAppleDevice) {
+                if (device.isIOS) {
                     showSmartNotification('檔案已下載，請點擊檔案加入日曆', 'success', 5000);
                 } else if (device.isAndroid) {
                     showSmartNotification('檔案已下載，請用日曆 App 開啟', 'info', 5000);
@@ -2040,51 +2370,245 @@ END:VCALENDAR`;
         }
 
         // 預約提交函數
-        async function submitBooking() {
-            const title = document.getElementById('meetingTitle').value.trim();
-            const room = document.getElementById('meetingRoom').value;
-            const date = document.getElementById('meetingDate').value;
-            const startTime = document.getElementById('startTime').value;
-            const endTime = document.getElementById('endTime').value;
-            const organizer = document.getElementById('organizer').value.trim();
-            const isRecurring = document.getElementById('recurringBooking').checked;
-            const recurringType = document.getElementById('recurringType').value;
-            const recurringWeeks = parseInt(document.getElementById('recurringWeeks').value);
+        // 衝突檢查（即時查詢資料庫）
+async function checkRecurringConflicts(recurringDates, room, startTime, endTime) {
+    if (!supabaseClient) {
+        console.warn('資料庫客戶端未初始化，跳過衝突檢測');
+        return [];
+    }
+    
+    try {
+        console.log('開始衝突檢測:', { recurringDates, room, startTime, endTime });
+        
+        const { data, error } = await supabaseClient
+            .from('bookings')
+            .select('*')
+            .in('date', recurringDates)
+            .eq('room', room);
+        
+        if (error) {
+            console.error('衝突檢查失敗:', error);
+            throw error; // 改為拋出錯誤而不是默默回傳空陣列
+        }
+        
+        console.log('查詢到的相同會議室預約:', data);
+        
+        const conflicts = [];
+        data.forEach(booking => {
+            // 確保時間格式一致
+            const existingStart = booking.start_time;
+            const existingEnd = booking.end_time;
             
-            // 驗證必填欄位
-            if (!title) { showModal('預約失敗', '請填寫會議主題。'); return; }
-            if (!room) { showModal('預約失敗', '請選擇會議室。'); return; }
-            if (!date) { showModal('預約失敗', '請選擇日期。'); return; }
-            if (!startTime) { showModal('預約失敗', '請選擇開始時間。'); return; }
-            if (!endTime) { showModal('預約失敗', '請選擇結束時間。'); return; }
-            if (!organizer) { showModal('預約失敗', '請填寫登記者。'); return; }
+            console.log('檢查時間重疊:', {
+                existing: `${existingStart}-${existingEnd}`,
+                new: `${startTime}-${endTime}`
+            });
             
-            // 驗證時間邏輯
-            if (timeToMinutes(startTime) >= timeToMinutes(endTime)) {
-                showModal('預約失敗', '結束時間必須晚於開始時間。');
+            if (timeOverlap(existingStart, existingEnd, startTime, endTime)) {
+                console.log('發現衝突:', booking);
+                conflicts.push({
+                    date: booking.date,
+                    booking: formatBookingFromDB(booking)
+                });
+            }
+        });
+        
+        console.log(`衝突檢測完成，發現 ${conflicts.length} 個衝突`);
+        return conflicts;
+        
+    } catch (error) {
+        console.error('衝突檢查錯誤:', error);
+        // 發生錯誤時應該阻止預約，而不是允許繼續
+        throw new Error(`衝突檢測失敗: ${error.message}`);
+    }
+}
+
+// 時間重疊檢測函數
+function timeOverlap(start1, end1, start2, end2) {
+    const s1 = timeToMinutes(start1);
+    const e1 = timeToMinutes(end1);
+    const s2 = timeToMinutes(start2);
+    const e2 = timeToMinutes(end2);
+    
+    const overlap = s1 < e2 && s2 < e1;
+    
+    console.log('時間重疊檢測:', {
+        time1: `${start1}-${end1} (${s1}-${e1}分鐘)`,
+        time2: `${start2}-${end2} (${s2}-${e2}分鐘)`,
+        overlap: overlap
+    });
+    
+    return overlap;
+}
+
+// 重設表單函數 - 清空所有表單欄位並恢復預設狀態
+function resetForm() {
+    try {
+        console.log('開始重設表單...');
+        
+        // 清空基本欄位
+        const meetingTitle = document.getElementById('meetingTitle');
+        const meetingRoom = document.getElementById('meetingRoom');
+        const startTime = document.getElementById('startTime');
+        const endTime = document.getElementById('endTime');
+        const organizer = document.getElementById('organizer');
+        const meetingDate = document.getElementById('meetingDate');
+        const dateDisplay = document.getElementById('dateDisplay');
+        
+        if (meetingTitle) meetingTitle.value = '';
+        if (meetingRoom) meetingRoom.value = '';
+        if (startTime) startTime.value = '';
+        if (endTime) endTime.value = '';
+        if (organizer) organizer.value = '';
+        if (meetingDate) meetingDate.value = '';
+        if (dateDisplay) {
+            dateDisplay.textContent = '請點擊選擇日期';
+            dateDisplay.classList.add('placeholder');
+            dateDisplay.classList.remove('has-value');
+        }
+        
+        // 重設週期預約選項
+        const recurringCheckbox = document.getElementById('recurringBooking');
+        const recurringOptions = document.getElementById('recurringOptions');
+        const recurringPeriod = document.getElementById('recurringPeriod');
+        const monthlyModeOption = document.getElementById('monthlyModeOption');
+        
+        if (recurringCheckbox) {
+            recurringCheckbox.checked = false;
+        }
+        
+        // 隱藏週期預約相關選項
+        if (recurringOptions) {
+            recurringOptions.style.display = 'none';
+        }
+        if (recurringPeriod) {
+            recurringPeriod.style.display = 'none';
+        }
+        if (monthlyModeOption) {
+            monthlyModeOption.style.display = 'none';
+        }
+        
+        // 重設週期預約的下拉選單為預設值
+        const recurringType = document.getElementById('recurringType');
+        const recurringWeeks = document.getElementById('recurringWeeks');
+        
+        if (recurringType) {
+            recurringType.value = 'weekly'; // 恢復預設值
+        }
+        if (recurringWeeks) {
+            recurringWeeks.value = '12'; // 恢復預設值
+        }
+        
+        // 清空模式說明文字
+        const modeExplanation = document.getElementById('modeExplanation');
+        if (modeExplanation) {
+            modeExplanation.textContent = '';
+        }
+        
+        console.log('表單重設完成');
+        
+    } catch (error) {
+        console.error('重設表單時發生錯誤:', error);
+        // 即使發生錯誤也不要讓整個流程中斷
+    }
+}
+
+// 預約提交函數 - 完整繁體中文版本
+async function submitBooking() {
+    try {
+        console.log('開始提交預約...');
+        
+        const title = document.getElementById('meetingTitle').value.trim();
+        const room = document.getElementById('meetingRoom').value;
+        const date = document.getElementById('meetingDate').value;
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+        const organizer = document.getElementById('organizer').value.trim();
+        const isRecurring = document.getElementById('recurringBooking').checked;
+        const recurringType = document.getElementById('recurringType').value;
+        const recurringWeeks = parseInt(document.getElementById('recurringWeeks').value);
+        
+        console.log('表單資料:', { title, room, date, startTime, endTime, organizer, isRecurring, recurringType, recurringWeeks });
+        
+        // 驗證必填欄位
+        if (!title) { 
+            showModal('預約失敗', '請填寫會議主題。'); 
+            return; 
+        }
+        if (!room) { 
+            showModal('預約失敗', '請選擇會議室。'); 
+            return; 
+        }
+        if (!date) { 
+            showModal('預約失敗', '請選擇日期。'); 
+            return; 
+        }
+        if (!startTime) { 
+            showModal('預約失敗', '請選擇開始時間。'); 
+            return; 
+        }
+        if (!endTime) { 
+            showModal('預約失敗', '請選擇結束時間。'); 
+            return; 
+        }
+        if (!organizer) { 
+            showModal('預約失敗', '請填寫登記者。'); 
+            return; 
+        }
+        
+        // 驗證時間邏輯
+        if (timeToMinutes(startTime) >= timeToMinutes(endTime)) {
+            showModal('預約失敗', '結束時間必須晚於開始時間。');
+            return;
+        }
+        
+        // 處理週期預約
+        let datesToBook = [date];
+        if (isRecurring) {
+            if (!recurringType || isNaN(recurringWeeks)) {
+                showModal('預約失敗', '請選擇週期預約的重複頻率和持續期間。');
                 return;
             }
-            
-            // 處理週期預約
-            let datesToBook = [date];
-            if (isRecurring) {
-                datesToBook = generateRecurringDates(date, recurringType, recurringWeeks);
-            }
-            
-            // 檢查衝突
+            console.log('產生週期預約日期...');
+            datesToBook = generateRecurringDates(date, recurringType, recurringWeeks);
+            console.log('週期預約日期:', datesToBook);
+        }
+        
+        if (!datesToBook || datesToBook.length === 0) {
+            showModal('預約失敗', '無法產生預約日期，請檢查日期設定。');
+            return;
+        }
+        
+        // 檢查衝突
+        console.log('開始檢查衝突...');
+        try {
             const conflicts = await checkRecurringConflicts(datesToBook, room, startTime, endTime);
             if (conflicts.length > 0) {
-                let conflictMessage = '以下日期有衝突，無法預約：<br>';
+                let conflictMessage = '以下日期有衝突，無法預約：<br><br>';
                 conflicts.forEach(conflict => {
-                    conflictMessage += `• ${conflict.date}: ${conflict.booking.title}<br>`;
+                    conflictMessage += `📅 <strong>${conflict.date}</strong><br>`;
+                    conflictMessage += `🏢 ${conflict.booking.room}<br>`;
+                    conflictMessage += `⏰ ${formatTimeDisplay(conflict.booking.startTime)}-${formatTimeDisplay(conflict.booking.endTime)}<br>`;
+                    conflictMessage += `📋 ${conflict.booking.title}<br>`;
+                    conflictMessage += `👤 ${conflict.booking.organizer}<br><br>`;
                 });
-                showModal('預約失敗', conflictMessage);
+                showModal('預約失敗 - 時間衝突', conflictMessage);
                 return;
             }
-            
-            // 批量儲存預約
-            let successCount = 0;
-            for (const bookingDate of datesToBook) {
+            console.log('衝突檢查通過');
+        } catch (error) {
+            console.error('衝突檢測失敗:', error);
+            showModal('預約失敗', `衝突檢測時發生錯誤：<br><strong>${error.message}</strong><br><br>可能原因：<br>• 資料庫連線問題<br>• 網路連線不穩定<br><br>請稍後重試或聯絡系統管理員。`);
+            return;
+        }
+        
+        // 批量儲存預約
+        console.log('開始儲存預約...');
+        let successCount = 0;
+        let failedDates = [];
+        
+        for (const bookingDate of datesToBook) {
+            try {
                 const booking = {
                     date: bookingDate,
                     room: room,
@@ -2095,155 +2619,181 @@ END:VCALENDAR`;
                 };
                 
                 const success = await saveBooking(booking);
-                if (success) successCount++;
-            }
-            
-            if (successCount > 0) {
-                let successMessage;
-                if (isRecurring) {
-                    // 智慧顯示期間文字
-                    let periodText;
-                    const recurringTypeValue = document.getElementById('recurringType').value;
-                    
-                    if (recurringTypeValue === 'weekly') {
-                        if (recurringWeeks === 52) {
-                            periodText = '1年';
-                        } else if (recurringWeeks === 156) {
-                            periodText = '3年';
-                        } else if (recurringWeeks === 12) {
-                            periodText = '3個月';
-                        } else if (recurringWeeks === 24) {
-                            periodText = '6個月';
-                        } else {
-                            periodText = `${recurringWeeks}週`;
-                        }
-                    } else if (recurringTypeValue === 'monthly') {
-                        if (recurringWeeks === 52) {
-                            periodText = '1年';
-                        } else if (recurringWeeks === 104) {
-                            periodText = '2年';
-                        } else if (recurringWeeks === 156) {
-                            periodText = '3年';
-                        } else if (recurringWeeks === 9) {
-                            periodText = '2個月';
-                        } else if (recurringWeeks === 13) {
-                            periodText = '3個月';
-                        } else if (recurringWeeks === 26) {
-                            periodText = '6個月';
-                        } else {
-                            periodText = `${recurringWeeks}週`;
-                        }
-                    }
-                    
-                    successMessage = `成功預約 ${successCount} 場週期會議！<br>會議主題: ${title}<br>時間: ${startTime}-${endTime}<br>地點: ${room}<br>登記者: ${organizer}<br>頻率: ${recurringType === 'weekly' ? '每週' : '每月'}<br>期間: ${periodText}`;
+                if (success) {
+                    successCount++;
+                    console.log(`預約成功: ${bookingDate}`);
                 } else {
-                    successMessage = `會議主題: ${title}<br>時間: ${date} ${startTime}-${endTime}<br>地點: ${room}<br>登記者: ${organizer}`;
+                    failedDates.push(bookingDate);
+                    console.log(`預約失敗: ${bookingDate}`);
                 }
-                
-                showModal('預約成功！', successMessage);
-                resetForm();
-                
-                // 重新載入資料以確保同步
-                setTimeout(() => {
-                    loadBookings();
-                }, 1000);
-            }
-        }
-
-        function resetForm() {
-            document.getElementById('meetingTitle').value = '';
-            document.getElementById('meetingRoom').value = '';
-            document.getElementById('startTime').value = '';
-            document.getElementById('endTime').value = '';
-            document.getElementById('organizer').value = '';
-            document.getElementById('meetingDate').value = '';
-            document.getElementById('dateDisplay').textContent = '請選擇日期';
-            document.getElementById('recurringBooking').checked = false;
-            document.getElementById('recurringOptions').style.display = 'none';
-            document.getElementById('recurringPeriod').style.display = 'none';
-            document.getElementById('monthlyModeOption').style.display = 'none';
-        }
-
-        // 衝突檢查（即時查詢資料庫）
-        async function checkRecurringConflicts(recurringDates, room, startTime, endTime) {
-            if (!supabase) return [];
-            
-            try {
-                const { data, error } = await supabase
-                    .from('bookings')
-                    .select('*')
-                    .in('date', recurringDates)
-                    .eq('room', room);
-                
-                if (error) {
-                    console.error('衝突檢查失敗:', error);
-                    return [];
-                }
-                
-                const conflicts = [];
-                data.forEach(booking => {
-                    if (timeOverlap(booking.start_time, booking.end_time, startTime, endTime)) {
-                        conflicts.push({
-                            date: booking.date,
-                            booking: formatBookingFromDB(booking)
-                        });
-                    }
-                });
-                
-                return conflicts;
-                
             } catch (error) {
-                console.error('衝突檢查錯誤:', error);
-                return [];
+                failedDates.push(bookingDate);
+                console.error(`儲存預約失敗 (${bookingDate}):`, error);
             }
         }
-
-        // 工具函數
-        function timeToMinutes(timeStr) {
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            return hours * 60 + minutes;
-        }
-
-        function timeOverlap(start1, end1, start2, end2) {
-            const s1 = timeToMinutes(start1);
-            const e1 = timeToMinutes(end1);
-            const s2 = timeToMinutes(start2);
-            const e2 = timeToMinutes(end2);
-            
-            return s1 < e2 && s2 < e1;
-        }
-
-        function generateRecurringDates(startDate, recurringType, weeks) {
-            const dates = [];
-            const baseDate = new Date(startDate);
-            
-            // 每月模式預設使用相對週日邏輯
-            const isRelativeMode = (recurringType === 'monthly');
-            
-            console.log(`生成週期日期 - 模式: ${recurringType}, 期間: ${weeks}週, 相對週日: ${isRelativeMode}`);
-            
-            if (recurringType === 'weekly') {
-                // 每週邏輯不變
-                for (let i = 0; i < weeks; i++) {
-                    const nextDate = new Date(baseDate);
-                    nextDate.setDate(baseDate.getDate() + (i * 7));
-                    dates.push(formatDate(nextDate));
-                }
-            } else if (recurringType === 'monthly') {
-                // 每月預設使用相對週日模式
-                const totalMonths = Math.round(weeks / 4.33); // 將週數轉換為大概的月數
+        
+        // 顯示結果
+        if (successCount > 0) {
+            let successMessage;
+            if (isRecurring) {
+                // 智慧顯示期間文字
+                let periodText;
+                const recurringTypeValue = document.getElementById('recurringType').value;
+if (recurringTypeValue === 'weekly') {
+    if (recurringWeeks === 52) {
+        periodText = '1年';
+    } else if (recurringWeeks === 156) {
+        periodText = '3年';
+    } else if (recurringWeeks === 12) {
+        periodText = '3個月';
+    } else if (recurringWeeks === 24) {
+        periodText = '6個月';
+    } else {
+        periodText = `${recurringWeeks}週`;
+    }
+} else if (recurringTypeValue === 'biweekly') {
+    if (recurringWeeks === 52) {
+        periodText = '12個月（1年）';
+    } else if (recurringWeeks === 156) {
+        periodText = '36個月（3年）';
+    } else if (recurringWeeks === 26) {
+        periodText = '6個月（半年）';
+    } else if (recurringWeeks === 12) {
+        periodText = '12週';
+    } else if (recurringWeeks === 10) {
+        periodText = '10週';
+    } else if (recurringWeeks === 8) {
+        periodText = '8週';
+    } else if (recurringWeeks === 6) {
+        periodText = '6週';
+    } else if (recurringWeeks === 4) {
+        periodText = '4週';
+    } else {
+        periodText = `${recurringWeeks}週`;
+    }
+} else if (recurringTypeValue === 'monthly') {
+    if (recurringWeeks === 52) {
+        periodText = '1年';
+    } else if (recurringWeeks === 104) {
+        periodText = '2年';
+    } else if (recurringWeeks === 156) {
+        periodText = '3年';
+    } else if (recurringWeeks === 9) {
+        periodText = '2個月';
+    } else if (recurringWeeks === 13) {
+        periodText = '3個月';
+    } else if (recurringWeeks === 26) {
+        periodText = '6個月';
+    } else {
+        periodText = `${recurringWeeks}週`;
+    }
+}                
+                successMessage = `✅ <strong>成功預約 ${successCount} 場週期會議！</strong><br><br>`;
+                successMessage += `📋 <strong>會議主題：</strong>${title}<br>`;
+                successMessage += `⏰ <strong>時間：</strong>${startTime}-${endTime}<br>`;
+                successMessage += `🏢 <strong>地點：</strong>${room}<br>`;
+                successMessage += `👤 <strong>登記者：</strong>${organizer}<br>`;
+		let frequencyText;
+		if (recurringType === 'weekly') {
+    			frequencyText = '每週';
+		} else if (recurringType === 'biweekly') {
+    			frequencyText = '每雙週';
+		} else if (recurringType === 'monthly') {
+    			frequencyText = '每月';
+		} else {
+    			frequencyText = recurringType;
+		}
+		successMessage += `🔁 <strong>頻率：</strong>${frequencyText}<br>`;
+                successMessage += `📅 <strong>期間：</strong>${periodText}`;
                 
-                for (let i = 0; i < totalMonths; i++) {
-                    // 使用相對週日模式：每月第N個週X
-                    const nextDate = calculateRelativeWeeklyDate(baseDate, i);
-                    dates.push(formatDate(nextDate));
-                    console.log(`月份 ${i}: ${nextDate.toDateString()}`);
+                if (failedDates.length > 0) {
+                    successMessage += `<br><br>⚠️ <strong>部分日期預約失敗：</strong><br>${failedDates.join(', ')}`;
                 }
+            } else {
+                successMessage = `✅ <strong>預約成功！</strong><br><br>`;
+                successMessage += `📋 <strong>會議主題：</strong>${title}<br>`;
+                successMessage += `📅 <strong>日期：</strong>${date}<br>`;
+                successMessage += `⏰ <strong>時間：</strong>${startTime}-${endTime}<br>`;
+                successMessage += `🏢 <strong>地點：</strong>${room}<br>`;
+                successMessage += `👤 <strong>登記者：</strong>${organizer}`;
             }
             
-            console.log(`總共生成 ${dates.length} 個日期:`, dates);
-            return dates;
+            showModal('預約成功！', successMessage);
+            resetForm();
+            
+            // 重新載入資料以確保同步
+            setTimeout(() => {
+                loadBookings();
+            }, 1000);
+        } else {
+            showModal('預約失敗', `所有預約都未能成功建立。<br><br>失敗的日期：<br>${failedDates.join('<br>')}<br><br>請檢查網路連線或稍後重試。`);
         }
+        
+    } catch (error) {
+        console.error('提交預約時發生未預期的錯誤:', error);
+        showModal('系統錯誤', `提交預約時發生未預期的錯誤：<br><strong>${error.message}</strong><br><br>請重新整理頁面後再試，或聯絡系統管理員。`);
+    }
+}
+
+// 時間轉換函數 - 將 HH:MM 格式轉換為分鐘數
+function timeToMinutes(timeStr) {
+    if (!timeStr || typeof timeStr !== 'string') {
+        console.warn('無效的時間格式:', timeStr);
+        return 0;
+    }
+    
+    // 處理 HH:MM:SS 格式，只取前面的 HH:MM
+    if (timeStr.includes(':')) {
+        const timeParts = timeStr.split(':');
+        const hours = parseInt(timeParts[0]) || 0;
+        const minutes = parseInt(timeParts[1]) || 0;
+        const totalMinutes = hours * 60 + minutes;
+        
+        console.log(`時間轉換: ${timeStr} -> ${totalMinutes}分鐘`);
+        return totalMinutes;
+    }
+    
+    console.warn('無法解析時間格式:', timeStr);
+    return 0;
+}
+
+// 產生週期預約日期函數
+function generateRecurringDates(startDate, recurringType, weeks) {
+    const dates = [];
+    const baseDate = new Date(startDate);
+    
+    console.log(`產生週期日期 - 模式: ${recurringType}, 期間: ${weeks}週`);
+    
+    if (recurringType === 'weekly') {
+        // 每週邏輯
+        for (let i = 0; i < weeks; i++) {
+            const nextDate = new Date(baseDate);
+            nextDate.setDate(baseDate.getDate() + (i * 7));
+            dates.push(formatDate(nextDate));
+        }
+    } else if (recurringType === 'biweekly') {
+        // 每雙週邏輯（每14天）
+        const totalOccurrences = Math.ceil(weeks / 2); // 雙週次數
+        for (let i = 0; i < totalOccurrences; i++) {
+            const nextDate = new Date(baseDate);
+            nextDate.setDate(baseDate.getDate() + (i * 14)); // 每14天
+            dates.push(formatDate(nextDate));
+        }
+    } else if (recurringType === 'monthly') {
+        // 每月邏輯 - 使用相對週日模式
+        const totalMonths = Math.round(weeks / 4.33); // 將週數轉換為大概的月數
+        
+        for (let i = 0; i < totalMonths; i++) {
+            // 使用相對週日模式：每月第N個週X
+            const nextDate = calculateRelativeWeeklyDate(baseDate, i);
+            dates.push(formatDate(nextDate));
+            console.log(`月份 ${i}: ${nextDate.toDateString()}`);
+        }
+    }
+    
+    console.log(`總共產生 ${dates.length} 個日期:`, dates);
+    return dates;
+}
 
         function getCurrentUser() {
             return document.getElementById('organizer').value || '系統';
@@ -2283,14 +2833,22 @@ END:VCALENDAR`;
             document.getElementById('bookingModal').style.display = 'none';
         }
 
+        // 修正的載入函數
         function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
-            document.getElementById('submitBtn').disabled = show;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = show ? 'flex' : 'none';
+            }
+            
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = show;
+            }
         }
 
         // 事件監聽器設定
         function setupEventListeners() {
-            // 日期變更監聽
+            // 基本事件
             document.getElementById('meetingDate').addEventListener('change', updateDateDisplay);
             
             // 開始時間變更，自動設定結束時間
@@ -2345,27 +2903,6 @@ END:VCALENDAR`;
                 });
             }
             
-            // 相對週日模式切換監聽 (已移除，因為預設使用相對週日)
-            
-            // 日期變更時更新模式說明
-            const meetingDateInput = document.getElementById('meetingDate');
-            if (meetingDateInput) {
-                const originalUpdateDateDisplay = () => {
-                    const dateInput = document.getElementById('meetingDate');
-                    const dateDisplay = document.getElementById('dateDisplay');
-                    dateDisplay.textContent = formatDateDisplay(dateInput.value);
-                    
-                    // 如果是月模式且已勾選週期預約，更新說明
-                    const recurringType = document.getElementById('recurringType').value;
-                    if (recurringType === 'monthly' && document.getElementById('recurringBooking').checked) {
-                        updateModeExplanation();
-                    }
-                };
-                
-                meetingDateInput.removeEventListener('change', updateDateDisplay);
-                meetingDateInput.addEventListener('change', originalUpdateDateDisplay);
-            }
-            
             // 模態框關閉監聽
             const closeBtn = document.querySelector('.close');
             if (closeBtn) {
@@ -2394,7 +2931,77 @@ END:VCALENDAR`;
                 }
             });
             
-            console.log('所有事件監聽器已設定完成');
+            console.log('基本事件監聽器已設定完成');
+        }
+
+        // 設定額外的日期相關事件監聽器
+        function setupAdditionalDateEvents() {
+            const dateInput = document.getElementById('meetingDate');
+            const dateDisplay = document.getElementById('dateDisplay');
+            const dateContainer = document.querySelector('.date-picker-container');
+            
+            if (!dateInput || !dateDisplay || !dateContainer) {
+                console.warn('找不到日期相關元素');
+                return;
+            }
+            
+            // 日期輸入變更事件
+            dateInput.addEventListener('input', updateDateDisplay);
+            
+            // 點擊顯示區域開啟選擇器
+            dateDisplay.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('點擊日期顯示區域');
+                openDatePicker();
+            });
+            
+            // 容器點擊事件
+            dateContainer.addEventListener('click', function(e) {
+                if (e.target !== dateDisplay) {
+                    console.log('點擊日期容器');
+                    openDatePicker();
+                }
+            });
+            
+            // 鍵盤支援
+            dateDisplay.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    console.log('鍵盤觸發日期選擇器');
+                    openDatePicker();
+                }
+            });
+            
+            // 觸控事件（移動設備）
+            let touchStartTime = 0;
+            
+            dateDisplay.addEventListener('touchstart', function(e) {
+                touchStartTime = Date.now();
+                console.log('觸控開始');
+            }, { passive: true });
+            
+            dateDisplay.addEventListener('touchend', function(e) {
+                const touchDuration = Date.now() - touchStartTime;
+                if (touchDuration < 500) {
+                    e.preventDefault();
+                    console.log('短觸控觸發日期選擇器');
+                    openDatePicker();
+                }
+            });
+            
+            // 焦點視覺反饋
+            dateInput.addEventListener('focus', function() {
+                console.log('日期輸入獲得焦點');
+                dateDisplay.style.borderColor = '#2d4874';
+            });
+            
+            dateInput.addEventListener('blur', function() {
+                console.log('日期輸入失去焦點');
+                dateDisplay.style.borderColor = '#e2e8f0';
+            });
+            
+            console.log('日期相關事件監聽器已設定');
         }
 
         // 初始化函數
@@ -2403,6 +3010,7 @@ END:VCALENDAR`;
             
             initializeTimeSelects();
             setupEventListeners();
+            setupAdditionalDateEvents(); // 設定日期相關事件
             
             // 更新週別顯示
             updateWeekDisplay();

@@ -1742,14 +1742,15 @@ function openEditForm(booking, mode = 'single', futureBookings = []) {
         console.log('設定單次編輯');
     }
     
-    // 載入資料到表單
-    document.getElementById('meetingTitle').value = booking.title || '';
-    document.getElementById('meetingRoom').value = booking.room || '';
-    document.getElementById('meetingDate').value = booking.date || '';
-    document.getElementById('startTime').value = booking.startTime || '';
-    document.getElementById('endTime').value = booking.endTime || '';
-    document.getElementById('organizer').value = booking.organizer || '';
-    
+	// 載入資料到表單
+	document.getElementById('meetingTitle').value = booking.title || '';
+	document.getElementById('meetingRoom').value = booking.room || '';
+	document.getElementById('meetingDate').value = booking.date || '';
+	document.getElementById('organizer').value = booking.organizer || '';
+
+	// 特殊處理時間選項
+	setTimeSelectValue('startTime', booking.startTime);
+	setTimeSelectValue('endTime', booking.endTime);    
     // 禁用週期相關選項
     const recurringCheckbox = document.getElementById('recurringBooking');
     const checkboxGroup = recurringCheckbox?.closest('.checkbox-group');
@@ -2299,6 +2300,26 @@ function updateRecurringPeriodOptions() {
             }
             return times;
         }
+
+// 設定時間選擇器的值，如果選項不存在則動態添加
+function setTimeSelectValue(selectId, timeValue) {
+    const selectElement = document.getElementById(selectId);
+    if (!selectElement || !timeValue) return;
+    
+    // 檢查選項是否已存在
+    const existingOption = Array.from(selectElement.options).find(option => option.value === timeValue);
+    
+    if (!existingOption) {
+        // 如果選項不存在，動態添加
+        const newOption = document.createElement('option');
+        newOption.value = timeValue;
+        newOption.textContent = formatTimeDisplay(timeValue);
+        selectElement.appendChild(newOption);
+    }
+    
+    // 設定選中值
+    selectElement.value = timeValue;
+}
 
         function initializeTimeSelects() {
             const startSelect = document.getElementById('startTime');

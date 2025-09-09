@@ -105,6 +105,14 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
             margin-bottom: 20px;
         }
+	.booking-form h3 {
+    		margin-bottom: 20px;
+    		color: #2d3748;
+    		display: flex;
+    		align-items: center;
+    		justify-content: space-between;
+   		 white-space: nowrap;
+	}
 
         .form-group {
             margin-bottom: 20px;
@@ -118,17 +126,34 @@
             color: #2d3748;
         }
 
-        .form-group select,
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 16px; /* 重要：防止手機縮放 */
-            transition: all 0.3s ease;
-            font-family: inherit;
-            box-sizing: border-box;
-        }
+      .form-group select,
+	.form-group input {
+    	width: 100%;
+    	padding: 12px;
+    	border: 2px solid #e2e8f0;
+    	border-radius: 10px;
+    	font-size: 16px;
+    	transition: all 0.3s ease;
+    	font-family: inherit;
+    	box-sizing: border-box;
+	}
+	#meetingRoom,
+	#startTime,
+	#endTime {
+    		padding-right: 40px; /* 為自定義箭頭留空間 */
+    
+    		/* 隱藏原生箭頭 */
+    		-webkit-appearance: none;
+    		-moz-appearance: none;
+    		appearance: none;
+    
+    		/* 添加自定義箭頭 */
+   		 background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+   		 background-position: right 15px center; /* 箭頭距離右邊 15px */
+    		background-repeat: no-repeat;
+   		 background-size: 16px 16px;
+}
+
 
         /* 改進的日期選擇器樣式 */
         .date-picker-container {
@@ -225,11 +250,7 @@
             cursor: pointer;
         }
 
-        .checkbox-group span {
-            font-weight: 600;
-            color: #2d3748;
-        }
-	
+       	
 	.checkbox-group span {
             font-weight: 600;
             color: #2d3748;
@@ -742,7 +763,8 @@
             border-radius: 12px;
             font-size: 11px;
             font-weight: 600;
-            margin-left: 10px;
+            margin-left: 3px;
+	    margin-right: 3px;   /* 新增：給返回按鈕留出空間 */
         }
 
         .edit-mode-single {
@@ -1073,7 +1095,266 @@
 
         ::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(135deg, #94a3b8, #64748b);
-        }    </style>
+        }    
+	/* 編輯衝突模態框基本樣式 */
+.edit-conflict-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 1003;
+    backdrop-filter: blur(5px);
+}
+
+.edit-conflict-modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    max-width: 550px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.series-conflict {
+    max-width: 650px;
+}
+
+.edit-conflict-modal h4 {
+    margin: 0 0 20px 0;
+    color: #dc3545;
+    font-size: 1.4rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.conflict-details {
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.conflict-details p {
+    margin: 8px 0;
+    color: #2d3748;
+    line-height: 1.5;
+}
+
+.conflict-details strong {
+    color: #c53030;
+    font-weight: 600;
+}
+
+.conflict-summary {
+    background: #fffaf0;
+    border: 1px solid #fbd38d;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.conflict-summary p {
+    margin: 0;
+    color: #744210;
+    font-weight: 500;
+}
+
+.conflict-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.conflict-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f7fafc;
+    background: #fefefe;
+    color: #2d3748;
+    line-height: 1.4;
+}
+
+.conflict-item:last-child {
+    border-bottom: none;
+}
+
+.conflict-item:hover {
+    background: #f7fafc;
+}
+
+.conflict-item strong {
+    color: #c53030;
+    font-weight: 600;
+}
+
+.conflict-suggestion {
+    color: #4a5568;
+    font-style: italic;
+    text-align: center;
+    margin: 20px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #3182ce;
+}
+
+.conflict-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.conflict-btn-cancel,
+.conflict-btn-skip {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.conflict-btn-cancel {
+    background: #6c757d;
+    color: white;
+    border: 2px solid #6c757d;
+}
+
+.conflict-btn-cancel:hover {
+    background: #5a6268;
+    border-color: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.conflict-btn-skip {
+    background: #ffc107;
+    color: #212529;
+    border: 2px solid #ffc107;
+    font-weight: 700;
+}
+
+.conflict-btn-skip:hover {
+    background: #e0a800;
+    border-color: #e0a800;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+}
+
+.edit-conflict-modal .close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    cursor: pointer;
+    color: #dc3545;
+    font-weight: bold;
+    line-height: 1;
+    transition: color 0.3s ease;
+}
+
+.edit-conflict-modal .close:hover {
+    color: #a71e2a;
+    transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    .edit-conflict-modal-content {
+        margin: 20px;
+        padding: 20px;
+        max-width: none;
+        width: calc(100% - 40px);
+    }
+    
+    .series-conflict {
+        max-width: none;
+    }
+    
+    .conflict-options {
+        gap: 10px;
+    }
+    
+    .conflict-btn-cancel,
+    .conflict-btn-skip {
+        padding: 14px 16px;
+        font-size: 16px;
+    }
+}
+
+.conflict-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.conflict-list::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.conflict-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.conflict-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.edit-conflict-modal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.edit-conflict-modal-content {
+    animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+.edit-cancel-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+}
+
+.edit-cancel-btn:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+</style>
 </head>
 <body>
     <div class="container">
@@ -1236,6 +1517,34 @@
         </div>
     </div>
 
+<!-- 單次編輯衝突模態框 -->
+<div id="editConflictModal" class="edit-conflict-modal">
+    <div class="edit-conflict-modal-content">
+        <span class="close" onclick="closeEditConflictModal()">&times;</span>
+        <div id="editConflictMessage">
+            <!-- 動態填入衝突信息 -->
+        </div>
+        <div id="editConflictOptions" class="conflict-options">
+            <!-- 動態填入選項按鈕 -->
+        </div>
+    </div>
+</div>
+
+<!-- 系列編輯衝突模態框 -->
+<div id="seriesEditConflictModal" class="edit-conflict-modal">
+    <div class="edit-conflict-modal-content series-conflict">
+        <span class="close" onclick="closeSeriesEditConflictModal()">&times;</span>
+        <div id="seriesConflictMessage">
+            <!-- 動態填入系列衝突信息 -->
+        </div>
+        <div id="seriesConflictOptions" class="conflict-options">
+            <!-- 動態填入選項按鈕 -->
+        </div>
+    </div>
+</div>
+
+
+
     <!-- 直接載入 Supabase SDK -->
     <script src="https://unpkg.com/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
 
@@ -1310,7 +1619,7 @@
 		// 除錯資訊
             console.log('週期預約偵測結果:', {
                 targetBooking: targetBooking,
-                futureCount: futureCount,
+                futureCount: recurringInfo.futureBookings.length,
                 futureBookings: recurringInfo.futureBookings,
                 intervalType: recurringInfo.intervalType
             });
@@ -1367,80 +1676,55 @@
             }
         }
 
+	function closeEditModeModal() {
+    		const modal = document.getElementById('editModeModal');
+    		if (modal) {
+        	modal.style.display = 'none';
+    	}
+    pendingEditBooking = null;
+}
+
         // 開啟編輯表單
-        function openEditForm(booking, mode = 'single', futureBookings = []) {
-            currentEditingBooking = booking;
-            isEditMode = true;
-            editMode = mode;
-            futureBookingsToEdit = futureBookings;
-            
-            // 載入資料到表單
-            document.getElementById('meetingTitle').value = booking.title || '';
-            document.getElementById('meetingRoom').value = booking.room || '';
-            document.getElementById('meetingDate').value = booking.date || '';
-            document.getElementById('startTime').value = booking.startTime || '';
-            document.getElementById('endTime').value = booking.endTime || '';
-            document.getElementById('organizer').value = booking.organizer || '';
-            
-            // 隱藏週期相關選項（系列編輯不允許修改週期設定）
-            if (mode === 'series') {
-                const recurringOptions = document.getElementById('recurringOptions');
-                const recurringPeriod = document.getElementById('recurringPeriod');
-                const monthlyModeOption = document.getElementById('monthlyModeOption');
-                
-                if (recurringOptions) recurringOptions.style.display = 'none';
-                if (recurringPeriod) recurringPeriod.style.display = 'none';
-                if (monthlyModeOption) monthlyModeOption.style.display = 'none';
-                
-                // 取消週期預約勾選
-                const recurringCheckbox = document.getElementById('recurringBooking');
-                if (recurringCheckbox) recurringCheckbox.checked = false;
-            }
-            
-            updateDateDisplay();
-            updateUIForEditMode();
-        }
 
-        // 更新 UI 為編輯模式
-        function updateUIForEditMode() {
-            const submitBtn = document.getElementById('submitBtn');
-            const formTitle = document.querySelector('.booking-form h3');
-            
-            if (submitBtn) submitBtn.textContent = '💾 儲存變更';
-            
-            if (formTitle) {
-                const modeText = editMode === 'single' ? '單次' : `系列 (${futureBookingsToEdit.length}場)`;
-                const modeClass = editMode === 'single' ? 'edit-mode-single' : 'edit-mode-series';
-                
-                formTitle.innerHTML = `編輯預約 <span class="edit-mode-indicator ${modeClass}">${modeText}</span>`;
-            }
-            
-            // 滾動到表單
-            document.querySelector('.sidebar').scrollIntoView({ behavior: 'smooth' });
-        }
+// 取消編輯函數 - 修正版
+function cancelEdit() {
+    console.log('取消編輯模式');
+    
+    // 清理編輯狀態
+    currentEditingBooking = null;
+    isEditMode = false;
+    editMode = 'single';
+    futureBookingsToEdit = [];
+    
+    // 恢復週期預約勾選框狀態
+    const recurringCheckbox = document.getElementById('recurringBooking');
+    const checkboxGroup = recurringCheckbox?.closest('.checkbox-group');
+    
+    if (recurringCheckbox && checkboxGroup) {
+        recurringCheckbox.disabled = false;
+        checkboxGroup.classList.remove('disabled');
+        
+        const notice = checkboxGroup.querySelector('.edit-mode-notice');
+        if (notice) notice.remove();
+    }
+    
+    // 重設表單和 UI
+    resetForm();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const formTitle = document.querySelector('.booking-form h3');
+    
+    if (submitBtn) {
+        submitBtn.textContent = '確認預約';
+        submitBtn.disabled = false;
+    }
+    if (formTitle) {
+        formTitle.innerHTML = '新增預約';
+    }
+    
+    console.log('已恢復為新增預約模式');
+}
 
-        // 取消編輯
-        function cancelEdit() {
-            currentEditingBooking = null;
-            isEditMode = false;
-            editMode = 'single';
-            futureBookingsToEdit = [];
-            
-            resetForm();
-            
-            const submitBtn = document.getElementById('submitBtn');
-            const formTitle = document.querySelector('.booking-form h3');
-            
-            if (submitBtn) submitBtn.textContent = '確認預約';
-            if (formTitle) formTitle.textContent = '新增預約';
-        }
-
-        // 關閉編輯模式選擇框
-        function closeEditModeModal() {
-            const modal = document.getElementById('editModeModal');
-            if (modal) modal.style.display = 'none';
-            pendingEditBooking = null;
-        }
 
 function openEditForm(booking, mode = 'single', futureBookings = []) {
     console.log('開啟編輯表單:', { booking, mode, futureBookings });
@@ -1498,6 +1782,27 @@ function openEditForm(booking, mode = 'single', futureBookings = []) {
     updateUIForEditMode();
 }
 
+function updateUIForEditMode() {
+    const submitBtn = document.getElementById('submitBtn');
+    const formTitle = document.querySelector('.booking-form h3');
+    
+    if (submitBtn) submitBtn.textContent = '💾 儲存變更';
+    
+    if (formTitle) {
+        const modeText = editMode === 'single' ? '單次' : `系列 (${futureBookingsToEdit.length}場)`;
+        const modeClass = editMode === 'single' ? 'edit-mode-single' : 'edit-mode-series';
+        
+        formTitle.innerHTML = `
+            <div style="display: flex; align-items: center;">
+                編輯預約 
+                <span class="edit-mode-indicator ${modeClass}">${modeText}</span>
+            </div>
+            <button class="edit-cancel-btn" onclick="cancelEdit()">返回</button>
+        `;
+    }
+    
+    document.querySelector('.sidebar').scrollIntoView({ behavior: 'smooth' });
+}
 
 // 取消編輯
 function cancelEdit() {
@@ -2843,14 +3148,14 @@ END:VCALENDAR`;
 
         // 預約提交函數
         // 衝突檢查（即時查詢資料庫）
-async function checkRecurringConflicts(recurringDates, room, startTime, endTime) {
+async function checkRecurringConflicts(recurringDates, room, startTime, endTime, excludeIds = []) {
     if (!supabaseClient) {
         console.warn('資料庫客戶端未初始化，跳過衝突檢測');
         return [];
     }
     
     try {
-        console.log('開始衝突檢測:', { recurringDates, room, startTime, endTime });
+        console.log('開始衝突檢測:', { recurringDates, room, startTime, endTime, excludeIds });
         
         const { data, error } = await supabaseClient
             .from('bookings')
@@ -2860,14 +3165,19 @@ async function checkRecurringConflicts(recurringDates, room, startTime, endTime)
         
         if (error) {
             console.error('衝突檢查失敗:', error);
-            throw error; // 改為拋出錯誤而不是默默回傳空陣列
+            throw error;
         }
         
         console.log('查詢到的相同會議室預約:', data);
         
         const conflicts = [];
         data.forEach(booking => {
-            // 確保時間格式一致
+            // 排除指定的預約ID
+            if (excludeIds.includes(booking.id)) {
+                console.log('排除自己的預約:', booking.id);
+                return;
+            }
+            
             const existingStart = booking.start_time;
             const existingEnd = booking.end_time;
             
@@ -2890,10 +3200,243 @@ async function checkRecurringConflicts(recurringDates, room, startTime, endTime)
         
     } catch (error) {
         console.error('衝突檢查錯誤:', error);
-        // 發生錯誤時應該阻止預約，而不是允許繼續
         throw new Error(`衝突檢測失敗: ${error.message}`);
     }
 }
+
+async function checkSingleEditConflicts(bookingId, date, room, startTime, endTime) {
+    try {
+        console.log('檢查單次編輯衝突:', { bookingId, date, room, startTime, endTime });
+        
+        const conflicts = await checkRecurringConflicts([date], room, startTime, endTime, [bookingId]);
+        
+        return conflicts;
+    } catch (error) {
+        console.error('單次編輯衝突檢查失敗:', error);
+        throw error;
+    }
+}
+
+// 5.2 系列編輯衝突檢查
+async function checkSeriesEditConflicts(seriesIds, dates, room, startTime, endTime) {
+    try {
+        console.log('檢查系列編輯衝突:', { seriesIds, dates, room, startTime, endTime });
+        
+        const conflicts = await checkRecurringConflicts(dates, room, startTime, endTime, seriesIds);
+        
+        const conflictStats = {
+            totalDates: dates.length,
+            conflictDates: conflicts.length,
+            successDates: dates.length - conflicts.length,
+            conflicts: conflicts
+        };
+        
+        console.log('系列編輯衝突統計:', conflictStats);
+        return conflictStats;
+        
+    } catch (error) {
+        console.error('系列編輯衝突檢查失敗:', error);
+        throw error;
+    }
+}
+
+// 5.3 顯示單次編輯衝突模態框
+function showEditConflictModal(conflicts, isSeriesEdit = false) {
+    const modal = document.getElementById('editConflictModal');
+    const message = document.getElementById('editConflictMessage');
+    const options = document.getElementById('editConflictOptions');
+    
+    if (!modal) {
+        console.error('找不到編輯衝突模態框');
+        return;
+    }
+    
+    const conflict = conflicts[0];
+    message.innerHTML = `
+        <h4>預約衝突</h4>
+        <div class="conflict-details">
+            <p><strong>衝突日期：</strong>${conflict.date}</p>
+            <p><strong>會議室：</strong>${conflict.booking.room}</p>
+            <p><strong>現有時間：</strong>${formatTimeDisplay(conflict.booking.startTime)} - ${formatTimeDisplay(conflict.booking.endTime)}</p>
+            <p><strong>現有會議：</strong>${conflict.booking.title}</p>
+            <p><strong>預約者：</strong>${conflict.booking.organizer}</p>
+        </div>
+        <p class="conflict-suggestion">請修改您的預約時間或選擇其他會議室。</p>
+    `;
+    
+    options.innerHTML = `
+        <button class="btn conflict-btn-cancel" onclick="closeEditConflictModal()">返回修改</button>
+    `;
+    
+    modal.style.display = 'block';
+}
+
+// 5.4 顯示系列編輯衝突模態框
+function showSeriesEditConflictModal(conflictStats) {
+    const modal = document.getElementById('seriesEditConflictModal');
+    const message = document.getElementById('seriesConflictMessage');
+    const options = document.getElementById('seriesConflictOptions');
+    
+    if (!modal) {
+        console.error('找不到系列編輯衝突模態框');
+        return;
+    }
+    
+    let conflictList = '';
+    conflictStats.conflicts.forEach(conflict => {
+        conflictList += `
+            <div class="conflict-item">
+                <strong>${conflict.date}</strong> - ${conflict.booking.title} (${formatTimeDisplay(conflict.booking.startTime)}-${formatTimeDisplay(conflict.booking.endTime)})
+            </div>
+        `;
+    });
+    
+    message.innerHTML = `
+        <h4>系列編輯衝突</h4>
+        <div class="conflict-summary">
+            <p>共 ${conflictStats.totalDates} 個預約，其中 ${conflictStats.conflictDates} 個產生衝突：</p>
+        </div>
+        <div class="conflict-list">
+            ${conflictList}
+        </div>
+        <p class="conflict-suggestion">請修改您的預約時間或選擇其他會議室。</p>
+    `;
+    
+    window.pendingSeriesConflictStats = conflictStats;
+    
+    options.innerHTML = `
+         <button class="btn conflict-btn-cancel" onclick="closeSeriesEditConflictModal()">返回修改</button>
+    `;
+    
+    modal.style.display = 'block';
+}
+
+// 5.5 確認系列編輯處理衝突
+async function confirmSeriesEditWithConflicts(action) {
+    if (action === 'skip' && window.pendingSeriesConflictStats) {
+        const stats = window.pendingSeriesConflictStats;
+        
+        const conflictDates = stats.conflicts.map(c => c.date);
+        const nonConflictBookings = futureBookingsToEdit.filter(booking => 
+            !conflictDates.includes(booking.date)
+        );
+        
+        if (nonConflictBookings.length === 0) {
+            showModal('無法更新', '所有日期都有衝突，無法執行更新。');
+            closeSeriesEditConflictModal();
+            return;
+        }
+        
+        const confirmed = confirm(
+            `確定要跳過 ${stats.conflictDates} 個衝突日期，更新剩餘 ${nonConflictBookings.length} 個預約嗎？`
+        );
+        
+        if (confirmed) {
+            closeSeriesEditConflictModal();
+            await updatePartialSeriesBookings(nonConflictBookings);
+        }
+    }
+}
+
+// 5.6 部分系列更新
+async function updatePartialSeriesBookings(bookingsToUpdate) {
+    try {
+        showLoading(true);
+        
+        const title = document.getElementById('meetingTitle').value.trim();
+        const room = document.getElementById('meetingRoom').value;
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+        const organizer = document.getElementById('organizer').value.trim();
+        
+        let successCount = 0;
+        let failedCount = 0;
+        
+        for (const booking of bookingsToUpdate) {
+            try {
+                const { error } = await supabaseClient
+                    .from('bookings')
+                    .update({
+                        title: title,
+                        room: room,
+                        start_time: startTime,
+                        end_time: endTime,
+                        organizer: organizer
+                    })
+                    .eq('id', booking.id);
+                
+                if (error) {
+                    console.error(`更新預約 ${booking.id} 失敗:`, error);
+                    failedCount++;
+                } else {
+                    console.log(`更新預約 ${booking.id} 成功`);
+                    successCount++;
+                }
+            } catch (error) {
+                console.error(`更新預約 ${booking.id} 時發生錯誤:`, error);
+                failedCount++;
+            }
+        }
+        
+        const skippedCount = futureBookingsToEdit.length - bookingsToUpdate.length;
+        let message = `部分更新完成<br><br>`;
+        message += `會議主題：${title}<br>`;
+        message += `地點：${room}<br>`;
+        message += `時間：${startTime}-${endTime}<br>`;
+        message += `登記者：${organizer}<br><br>`;
+        message += `成功更新：${successCount} 個預約<br>`;
+        message += `跳過衝突：${skippedCount} 個預約<br>`;
+        
+        if (failedCount > 0) {
+            message += `更新失敗：${failedCount} 個預約<br>`;
+        }
+        
+        showModal('部分更新完成', message);
+        cancelEdit();
+        setTimeout(() => loadBookings(), 1000);
+        
+    } catch (error) {
+        console.error('部分系列更新失敗:', error);
+        showModal('更新失敗', `部分更新時發生錯誤：${error.message}`);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// 5.7 關閉衝突模態框
+function closeEditConflictModal() {
+    const modal = document.getElementById('editConflictModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function closeSeriesEditConflictModal() {
+    const modal = document.getElementById('seriesEditConflictModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    window.pendingSeriesConflictStats = null;
+}
+
+// 5.8 設定衝突事件監聽器
+function setupEditConflictEventListeners() {
+    const editConflictModal = document.getElementById('editConflictModal');
+    if (editConflictModal) {
+        editConflictModal.addEventListener('click', function(e) {
+            if (e.target === this) closeEditConflictModal();
+        });
+    }
+    
+    const seriesEditConflictModal = document.getElementById('seriesEditConflictModal');
+    if (seriesEditConflictModal) {
+        seriesEditConflictModal.addEventListener('click', function(e) {
+            if (e.target === this) closeSeriesEditConflictModal();
+        });
+    }
+}
+
+
 
 // 時間重疊檢測函數
 function timeOverlap(start1, end1, start2, end2) {
@@ -3286,41 +3829,84 @@ function generateRecurringDates(startDate, recurringType, weeks) {
 }
 
 // 更新預約函數
-        async function updateBooking() {
-            try {
-                const title = document.getElementById('meetingTitle').value.trim();
-                const room = document.getElementById('meetingRoom').value;
-                const date = document.getElementById('meetingDate').value;
-                const startTime = document.getElementById('startTime').value;
-                const endTime = document.getElementById('endTime').value;
-                const organizer = document.getElementById('organizer').value.trim();
-                
-                // 驗證必填欄位
-                if (!title || !room || !date || !startTime || !endTime || !organizer) {
-                    showModal('更新失敗', '請填寫所有必填欄位。');
-                    return;
-                }
-                
-                if (timeToMinutes(startTime) >= timeToMinutes(endTime)) {
-                    showModal('更新失敗', '結束時間必須晚於開始時間。');
-                    return;
-                }
-                
-                showLoading(true);
-                
-                if (editMode === 'single') {
-                    await updateSingleBooking(title, room, date, startTime, endTime, organizer);
-                } else if (editMode === 'series') {
-                    await updateSeriesBookings(title, room, startTime, endTime, organizer);
-                }
-                
-            } catch (error) {
-                console.error('更新失敗:', error);
-                showModal('更新失敗', `無法更新預約：${error.message}`);
-            } finally {
-                showLoading(false);
-            }
+async function updateBooking() {
+    try {
+        const title = document.getElementById('meetingTitle').value.trim();
+        const room = document.getElementById('meetingRoom').value;
+        const date = document.getElementById('meetingDate').value;
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+        const organizer = document.getElementById('organizer').value.trim();
+        
+        console.log('開始更新預約:', { title, room, date, startTime, endTime, organizer, editMode });
+        
+        // 基本驗證
+        if (!title || !room || !date || !startTime || !endTime || !organizer) {
+            showModal('更新失敗', '請填寫所有必填欄位。');
+            return;
         }
+        
+        if (timeToMinutes(startTime) >= timeToMinutes(endTime)) {
+            showModal('更新失敗', '結束時間必須晚於開始時間。');
+            return;
+        }
+        
+        showLoading(true);
+        
+        try {
+            if (editMode === 'single') {
+                // 單次編輯衝突檢查
+                console.log('執行單次編輯衝突檢查...');
+                const conflicts = await checkSingleEditConflicts(
+                    currentEditingBooking.id, 
+                    date, 
+                    room, 
+                    startTime, 
+                    endTime
+                );
+                
+                if (conflicts.length > 0) {
+                    showEditConflictModal(conflicts, false);
+                    return;
+                }
+                
+                await updateSingleBooking(title, room, date, startTime, endTime, organizer);
+                
+            } else if (editMode === 'series') {
+                // 系列編輯衝突檢查
+                console.log('執行系列編輯衝突檢查...');
+                const seriesIds = futureBookingsToEdit.map(b => b.id);
+                const dates = futureBookingsToEdit.map(b => b.date);
+                
+                const conflictStats = await checkSeriesEditConflicts(
+                    seriesIds,
+                    dates,
+                    room,
+                    startTime,
+                    endTime
+                );
+                
+                if (conflictStats.conflictDates > 0) {
+                    showSeriesEditConflictModal(conflictStats);
+                    return;
+                }
+                
+                await updateSeriesBookings(title, room, startTime, endTime, organizer);
+            }
+            
+        } catch (error) {
+            console.error('衝突檢查過程發生錯誤:', error);
+            showModal('衝突檢查失敗', `無法檢查衝突：${error.message}<br><br>請檢查網路連線後重試。`);
+        }
+        
+    } catch (error) {
+        console.error('更新失敗:', error);
+        showModal('更新失敗', `無法更新預約：${error.message}`);
+    } finally {
+        showLoading(false);
+    }
+}
+
 
         // 單次更新
         async function updateSingleBooking(title, room, date, startTime, endTime, organizer) {
@@ -3550,6 +4136,7 @@ function generateRecurringDates(startDate, recurringType, weeks) {
             });
             
             console.log('基本事件監聽器已設定完成');
+	    setupEditConflictEventListeners();
         }
 
         // 設定額外的日期相關事件監聽器

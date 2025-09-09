@@ -3055,111 +3055,383 @@ END:VCALENDAR`;
         }
 
         // 修改原有的 Google 日曆函數
-        async function addToGoogleCalendar(bookingId) {
-            hideAllCalendarMenus();
+async function addToGoogleCalendar(bookingId) {
+    hideAllCalendarMenus();
+    
+    // 找到預約資料
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) {
+        showSmartNotification('找不到預約資料', 'warning');
+        return;
+    }
+    
+    try {
+        // 偵測是否為週期預約
+        const recurringInfo = await detectRecurringBookings(booking);
+        
+        if (recurringInfo.isRecurring && recurringInfo.futureBookings.length > 1) {
+            // 週期預約：創建重複事件
+            await createRecurringGoogleCalendarEvent(booking, recurringInfo);
+        } else {
+            // 單次預約：保持原有的完整邏輯
+            // 處理時間格式
+            let startTime = booking.startTime;
+            let endTime = booking.endTime;
             
-            // 找到預約資料
-            const booking = bookings.find(b => b.id === bookingId);
-            if (!booking) {
-                showSmartNotification('找不到預約資料', 'warning');
-                return;
+            if (startTime && startTime.length > 5) {
+                startTime = startTime.substring(0, 5);
+            }
+            if (endTime && endTime.length > 5) {
+                endTime = endTime.substring(0, 5);
             }
             
-            try {
-                // 處理時間格式
-                let startTime = booking.startTime;
-                let endTime = booking.endTime;
-                
-                if (startTime && startTime.length > 5) {
-                    startTime = startTime.substring(0, 5);
-                }
-                if (endTime && endTime.length > 5) {
-                    endTime = endTime.substring(0, 5);
-                }
-                
-                // 建立日期時間物件
-                const startDateTime = new Date(`${booking.date}T${startTime}:00`);
-                const endDateTime = new Date(`${booking.date}T${endTime}:00`);
-                
-                if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
-                    throw new Error(`無效的日期時間格式`);
-                }
-                
-                // 格式化為 Google Calendar 格式
-                const formatGoogleDate = (date) => {
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const hours = String(date.getHours()).padStart(2, '0');
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    const seconds = String(date.getSeconds()).padStart(2, '0');
-                    
-                    return `${year}${month}${day}T${hours}${minutes}${seconds}`;
-                };
-                
-                const startFormatted = formatGoogleDate(startDateTime);
-                const endFormatted = formatGoogleDate(endDateTime);
-                
-                // 建立 Google Calendar URL
-                const params = new URLSearchParams({
-                    action: 'TEMPLATE',
-                    text: booking.title || '會議',
-                    dates: `${startFormatted}/${endFormatted}`,
-                    location: booking.room || '',
-                    details: `登記者: ${booking.organizer || '未知'}\n\n透過 Gama 會議室預約系統建立`
-                });
-                
-                const googleCalendarUrl = `https://calendar.google.com/calendar/render?${params.toString()}`;
-                
-                // 在新視窗開啟 Google Calendar
-                window.open(googleCalendarUrl, '_blank');
-                
-                showSmartNotification('已開啟 Google 日曆', 'success');
-                
-            } catch (error) {
-                console.error('加入 Google 日曆失敗:', error);
-                showSmartNotification(`加入 Google 日曆失敗: ${error.message}`, 'warning');
+            // 建立日期時間物件
+            const startDateTime = new Date(`${booking.date}T${startTime}:00`);
+            const endDateTime = new Date(`${booking.date}T${endTime}:00`);
+            
+            if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+                throw new Error(`無效的日期時間格式`);
             }
+            
+            // 格式化為 Google Calendar 格式
+            const formatGoogleDate = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                
+                return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+            };
+            
+            const startFormatted = formatGoogleDate(startDateTime);
+            const endFormatted = formatGoogleDate(endDateTime);
+            
+            // 建立 Google Calendar URL
+            const params = new URLSearchParams({
+                action: 'TEMPLATE',
+                text: booking.title || '會議',
+                dates: `${startFormatted}/${endFormatted}`,
+                location: booking.room || '',
+                details: `登記者: ${booking.organizer || '未知'}\n\n透過 Gama 會議室預約系統建立`
+            });
+            
+            const googleCalendarUrl = `https://calendar.google.com/calendar/render?${params.toString()}`;
+            
+            // 在新視窗開啟 Google Calendar
+            window.open(googleCalendarUrl, '_blank');
+            
+            showSmartNotification('已開啟 Google 日曆', 'success');
         }
+        
+    } catch (error) {
+        console.error('加入 Google 日曆失敗:', error);
+        showSmartNotification(`加入 Google 日曆失敗: ${error.message}`, 'warning');
+    }
+}
 
-        // 新增 Apple 日曆函數
-        function addToAppleCalendar(bookingId) {
-            hideAllCalendarMenus();
+// 新增：創建單次 Google Calendar 事件（重構現有邏輯）
+async function createSingleGoogleCalendarEvent(booking) {
+    // 處理時間格式
+    let startTime = booking.startTime;
+    let endTime = booking.endTime;
+    
+    if (startTime && startTime.length > 5) {
+        startTime = startTime.substring(0, 5);
+    }
+    if (endTime && endTime.length > 5) {
+        endTime = endTime.substring(0, 5);
+    }
+    
+    // 建立日期時間物件
+    const startDateTime = new Date(`${booking.date}T${startTime}:00`);
+    const endDateTime = new Date(`${booking.date}T${endTime}:00`);
+    
+    if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+        throw new Error(`無效的日期時間格式`);
+    }
+    
+    // 格式化為 Google Calendar 格式
+    const formatGoogleDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        
+        return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+    };
+    
+    const startFormatted = formatGoogleDate(startDateTime);
+    const endFormatted = formatGoogleDate(endDateTime);
+    
+    // 建立 Google Calendar URL
+    const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: booking.title || '會議',
+        dates: `${startFormatted}/${endFormatted}`,
+        location: booking.room || '',
+        details: `登記者: ${booking.organizer || '未知'}\n\n透過 Gama 會議室預約系統建立`
+    });
+    
+    const googleCalendarUrl = `https://calendar.google.com/calendar/render?${params.toString()}`;
+    
+    // 在新視窗開啟 Google Calendar
+    window.open(googleCalendarUrl, '_blank');
+    
+    showSmartNotification('已開啟 Google 日曆', 'success');
+}
+
+// 新增：創建週期 Google Calendar 事件
+async function createRecurringGoogleCalendarEvent(booking, recurringInfo) {
+    // 處理時間格式
+    let startTime = booking.startTime;
+    let endTime = booking.endTime;
+    
+    if (startTime && startTime.length > 5) {
+        startTime = startTime.substring(0, 5);
+    }
+    if (endTime && endTime.length > 5) {
+        endTime = endTime.substring(0, 5);
+    }
+    
+    // 建立開始日期時間物件
+    const startDateTime = new Date(`${booking.date}T${startTime}:00`);
+    const endDateTime = new Date(`${booking.date}T${endTime}:00`);
+    
+    if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+        throw new Error(`無效的日期時間格式`);
+    }
+    
+    // 格式化為 Google Calendar 格式
+    const formatGoogleDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        
+        return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+    };
+    
+    const startFormatted = formatGoogleDate(startDateTime);
+    const endFormatted = formatGoogleDate(endDateTime);
+    
+    // 生成 RRULE
+    const rrule = generateGoogleRRULE(recurringInfo);
+    
+    // 建立 Google Calendar URL with RRULE
+    const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: booking.title || '會議',
+        dates: `${startFormatted}/${endFormatted}`,
+        location: booking.room || '',
+        details: `登記者: ${booking.organizer || '未知'}\n\n週期預約，共 ${recurringInfo.futureBookings.length} 場\n透過 Gama 會議室預約系統建立`,
+        recur: rrule
+    });
+    
+    const googleCalendarUrl = `https://calendar.google.com/calendar/render?${params.toString()}`;
+    
+    // 在新視窗開啟 Google Calendar
+    window.open(googleCalendarUrl, '_blank');
+    
+    showSmartNotification(`已開啟 Google 日曆 (${recurringInfo.futureBookings.length} 場週期會議)`, 'success');
+}
+
+// 新增：生成 Google Calendar RRULE
+function generateGoogleRRULE(recurringInfo) {
+    const intervalType = recurringInfo.intervalType;
+    const count = recurringInfo.futureBookings.length;
+    
+    switch (intervalType) {
+        case 'weekly':
+            return `RRULE:FREQ=WEEKLY;COUNT=${count}`;
+        case 'biweekly':
+            return `RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=${count}`;
+        case 'monthly':
+            // 對於月重複，使用 BYSETPOS 和 BYDAY
+            const firstDate = new Date(recurringInfo.futureBookings[0].date);
+            const dayOfWeek = firstDate.getDay();
+            const weekOfMonth = Math.ceil(firstDate.getDate() / 7);
             
-            // 找到預約資料
-            const booking = bookings.find(b => b.id === bookingId);
-            if (!booking) {
-                showSmartNotification('找不到預約資料', 'warning');
-                return;
+            // 週幾的縮寫
+            const dayNames = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+            const dayName = dayNames[dayOfWeek];
+            
+            return `RRULE:FREQ=MONTHLY;COUNT=${count};BYDAY=${dayName};BYSETPOS=${weekOfMonth}`;
+        default:
+            return `RRULE:FREQ=WEEKLY;COUNT=${count}`;
+    }
+}
+
+
+
+// addToAppleCalendar 函數
+async function addToAppleCalendar(bookingId) {
+    hideAllCalendarMenus();
+    
+    // 找到預約資料
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) {
+        showSmartNotification('找不到預約資料', 'warning');
+        return;
+    }
+    
+    try {
+        // 偵測是否為週期預約
+        const recurringInfo = await detectRecurringBookings(booking);
+        const device = detectDevice();
+        
+        if (recurringInfo.isRecurring && recurringInfo.futureBookings.length > 1) {
+            // 週期預約：生成包含重複規則的 ICS
+            const icsContent = generateRecurringICS(booking, recurringInfo);
+            const filename = `${booking.title || '會議'}_週期預約_${booking.date}.ics`;
+            
+            // 下載檔案
+            downloadICS(icsContent, filename);
+            
+            // 顯示智慧提示
+            if (device.isIOS) {
+                showSmartNotification(`週期預約檔案已下載 (${recurringInfo.futureBookings.length} 場)，請點擊檔案加入日曆`, 'success', 5000);
+            } else if (device.isAndroid) {
+                showSmartNotification(`週期預約檔案已下載 (${recurringInfo.futureBookings.length} 場)，請用日曆 App 開啟`, 'info', 5000);
+            } else {
+                showSmartNotification(`週期預約 ICS 檔案已下載 (${recurringInfo.futureBookings.length} 場)，請用日曆軟體開啟`, 'info', 5000);
             }
             
-            try {
-                // 設備偵測
-                const device = detectDevice();
-                
-                // 生成 ICS 檔案
-                const icsContent = generateICS(booking);
-                const filename = `${booking.title || '會議'}_${booking.date}.ics`;
-                
-                // 下載檔案
-                downloadICS(icsContent, filename);
-                
-                // 顯示智慧提示
-                if (device.isIOS) {
-                    showSmartNotification('檔案已下載，請點擊檔案加入日曆', 'success', 5000);
-                } else if (device.isAndroid) {
-                    showSmartNotification('檔案已下載，請用日曆 App 開啟', 'info', 5000);
-                } else {
-                    showSmartNotification('ICS 檔案已下載，請用日曆軟體開啟', 'info', 5000);
-                }
-                
-                console.log('Apple 日曆 ICS 檔案生成成功:', filename);
-                
-            } catch (error) {
-                console.error('加入 Apple 日曆失敗:', error);
-                showSmartNotification(`加入 Apple 日曆失敗: ${error.message}`, 'warning');
+            console.log('Apple 週期日曆檔案生成成功:', filename);
+            
+        } else {
+            // 單次預約：使用現有邏輯
+            // 生成 ICS 檔案
+            const icsContent = generateICS(booking);
+            const filename = `${booking.title || '會議'}_${booking.date}.ics`;
+            
+            // 下載檔案
+            downloadICS(icsContent, filename);
+            
+            // 顯示智慧提示
+            if (device.isIOS) {
+                showSmartNotification('檔案已下載，請點擊檔案加入日曆', 'success', 5000);
+            } else if (device.isAndroid) {
+                showSmartNotification('檔案已下載，請用日曆 App 開啟', 'info', 5000);
+            } else {
+                showSmartNotification('ICS 檔案已下載，請用日曆軟體開啟', 'info', 5000);
             }
+            
+            console.log('Apple 日曆 ICS 檔案生成成功:', filename);
         }
+        
+    } catch (error) {
+        console.error('加入 Apple 日曆失敗:', error);
+        showSmartNotification(`加入 Apple 日曆失敗: ${error.message}`, 'warning');
+    }
+}
+
+// 新增：生成週期 ICS 檔案
+function generateRecurringICS(booking, recurringInfo) {
+    try {
+        // 處理時間格式
+        let startTime = booking.startTime;
+        let endTime = booking.endTime;
+        
+        if (startTime && startTime.length > 5) {
+            startTime = startTime.substring(0, 5);
+        }
+        if (endTime && endTime.length > 5) {
+            endTime = endTime.substring(0, 5);
+        }
+        
+        // 建立日期時間物件
+        const startDateTime = new Date(`${booking.date}T${startTime}:00`);
+        const endDateTime = new Date(`${booking.date}T${endTime}:00`);
+        
+        // 檢查日期是否有效
+        if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+            throw new Error('無效的日期時間格式');
+        }
+        
+        // 格式化為 ICS 格式 (YYYYMMDDTHHMMSS)
+        const formatICSDateTime = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            
+            return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+        };
+        
+        const now = new Date();
+        const startFormatted = formatICSDateTime(startDateTime);
+        const endFormatted = formatICSDateTime(endDateTime);
+        const nowFormatted = formatICSDateTime(now);
+        
+        // 生成 ICS RRULE
+        const rrule = generateICSRRULE(recurringInfo);
+        
+        // 生成 ICS 內容
+        const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Gama//會議室預約系統//TW
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:${booking.id}-recurring@gama-booking.com
+DTSTAMP:${nowFormatted}
+DTSTART:${startFormatted}
+DTEND:${endFormatted}
+${rrule}
+SUMMARY:${booking.title || '會議'}
+LOCATION:${booking.room || ''}
+DESCRIPTION:登記者: ${booking.organizer || '未知'}\\n\\n週期預約，共 ${recurringInfo.futureBookings.length} 場\\n透過 Gama 會議室預約系統建立
+CATEGORIES:會議
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:會議提醒
+TRIGGER:-PT15M
+END:VALARM
+END:VEVENT
+END:VCALENDAR`;
+        
+        return icsContent;
+        
+    } catch (error) {
+        console.error('週期 ICS 生成失敗:', error);
+        throw error;
+    }
+}
+
+// 7. 新增：生成 ICS RRULE
+function generateICSRRULE(recurringInfo) {
+    const intervalType = recurringInfo.intervalType;
+    const count = recurringInfo.futureBookings.length;
+    
+    switch (intervalType) {
+        case 'weekly':
+            return `RRULE:FREQ=WEEKLY;COUNT=${count}`;
+        case 'biweekly':
+            return `RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=${count}`;
+        case 'monthly':
+            // 對於月重複，使用相對週日模式
+            const firstDate = new Date(recurringInfo.futureBookings[0].date);
+            const dayOfWeek = firstDate.getDay();
+            const weekOfMonth = Math.ceil(firstDate.getDate() / 7);
+            
+            // 週幾的縮寫
+            const dayNames = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+            const dayName = dayNames[dayOfWeek];
+            
+            return `RRULE:FREQ=MONTHLY;COUNT=${count};BYDAY=${dayName};BYSETPOS=${weekOfMonth}`;
+        default:
+            return `RRULE:FREQ=WEEKLY;COUNT=${count}`;
+    }
+}
+
 
         // 關閉週期刪除模態框
         function closeRecurringModal() {

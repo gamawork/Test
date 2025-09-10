@@ -4722,13 +4722,13 @@ function scrollToForm() {
     console.log('懸浮按鈕觸發：滾動到表單區域');
 }
 
-        // 初始化函數
+// 增強的初始化函數，包含多重檢查
         function initialize() {
             console.log('開始初始化系統...');
             
             initializeTimeSelects();
             setupEventListeners();
-            setupAdditionalDateEvents(); // 設定日期相關事件
+            setupAdditionalDateEvents();
             
             // 更新週別顯示
             updateWeekDisplay();
@@ -4739,57 +4739,87 @@ function scrollToForm() {
             // 初始化 Supabase 並載入資料
             initializeSupabase();
             
+            // 初始化懸浮按鈕（多重檢查）
+            initializeFloatingButton();
+            
             console.log('系統初始化完成');
         }
 
-        // 頁面載入完成後初始化
-        document.addEventListener('DOMContentLoaded', initialize);
-
-        // 頁面卸載時清理訂閱
-        window.addEventListener('beforeunload', () => {
-            if (realtimeSubscription) {
-                realtimeSubscription.unsubscribe();
-            }
-        });
-
-// 強制確保懸浮按鈕顯示 - 延遲執行確保 DOM 完全載入
-setTimeout(() => {
-    ensureFloatingButton();
-    
-    // 雙重檢查
-    setTimeout(() => {
-        const button = document.getElementById('floatingAddBtn');
-        if (button) {
-            const isMobile = window.innerWidth <= 768 || 
-                /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        // 專門的懸浮按鈕初始化函數
+        function initializeFloatingButton() {
+            console.log('開始初始化懸浮按鈕...');
             
-            if (isMobile) {
-                // 強制設定所有樣式
-                button.style.cssText = `
-                    position: fixed !important;
-                    bottom: 20px !important;
-                    right: 20px !important;
-                    width: 56px !important;
-                    height: 56px !important;
-                    z-index: 999999 !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    background: linear-gradient(135deg, #2d4874 0%, #1a2e4a 100%) !important;
-                    border: none !important;
-                    border-radius: 50% !important;
-                    color: white !important;
-                    font-size: 28px !important;
-                    cursor: pointer !important;
-                    box-shadow: 0 4px 16px rgba(45, 72, 116, 0.6) !important;
-                `;
-                console.log('懸浮按鈕強制設定完成');
-            }
+            // 立即執行一次
+            ensureFloatingButton();
+            
+            // DOM 完全載入後再執行
+            setTimeout(() => {
+                ensureFloatingButton();
+                
+                // 最終檢查
+                setTimeout(() => {
+                    const device = detectAdvancedDevice();
+                    console.log('設備詳細信息:', device);
+                    
+                    if (device.isMobileDevice()) {
+                        forceShowFloatingButton();
+                    }
+                }, 1000);
+            }, 500);
+            
+            // 視窗大小改變時重新檢查
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    console.log('視窗大小改變，重新檢查懸浮按鈕');
+                    ensureFloatingButton();
+                }, 250);
+            });
         }
-    }, 500);
-}, 100);
 
-    </script>
+        // 強制顯示懸浮按鈕的最後手段
+        function forceShowFloatingButton() {
+            console.log('執行懸浮按鈕強制顯示...');
+            
+            let button = document.getElementById('floatingAddBtn');
+            if (!button) {
+                console.log('按鈕不存在，創建新按鈕');
+                button = document.createElement('button');
+                button.id = 'floatingAddBtn';
+                button.innerHTML = '+';
+                button.onclick = scrollToForm;
+                document.body.appendChild(button);
+            }
+            
+            // 使用 setAttribute 強制設定樣式
+            const forceStyles = [
+                ['style', 'position: fixed !important; bottom: 20px !important; right: 20px !important; width: 56px !important; height: 56px !important; z-index: 2147483647 !important; display: flex !important; align-items: center !important; justify-content: center !important; background: linear-gradient(135deg, #2d4874 0%, #1a2e4a 100%) !important; border: none !important; border-radius: 50% !important; color: white !important; font-size: 28px !important; font-weight: 300 !important; cursor: pointer !important; box-shadow: 0 4px 16px rgba(45, 72, 116, 0.6) !important; transition: all 0.3s ease !important;']
+            ];
+            
+            forceStyles.forEach(([attr, value]) => {
+                button.setAttribute(attr, value);
+            });
+            
+            // 移除所有可能衝突的類別
+            button.className = '';
+            
+            // 確保按鈕在 body 的最後位置
+            document.body.appendChild(button);
+            
+            console.log('強制顯示完成，按鈕當前狀態:', {
+                exists: !!button,
+                display: button.style.display,
+                position: button.style.position,
+                zIndex: button.style.zIndex,
+                bottom: button.style.bottom,
+                right: button.style.right,
+                computedStyle: getComputedStyle(button).display
+            });
+        }
+
+        // 頁面載入完成後初始化
+        document.addEventListener('DOMContentLoaded', initialize);    </script>
 
 <!-- 編輯模式選擇模態框 -->
     <div id="editModeModal" class="edit-mode-modal">

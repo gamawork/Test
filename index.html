@@ -1394,14 +1394,16 @@
     font-weight: 300;
     cursor: pointer;
     box-shadow: 0 4px 16px rgba(45, 72, 116, 0.4);
-    z-index: 1001;
-    display: none;
+    z-index: 9999; /* 提高層級 */
+    display: none; /* 預設隱藏 */
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
     line-height: 1;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    /* 強制顯示在最上層 */
+    pointer-events: auto;
 }
 
 .floating-add-btn:hover {
@@ -1414,10 +1416,10 @@
     box-shadow: 0 2px 8px rgba(45, 72, 116, 0.3);
 }
 
-/* 只在手機端顯示 */
+/* 在手機端強制顯示 */
 @media (max-width: 768px) {
     .floating-add-btn {
-        display: flex;
+        display: flex !important; /* 強制顯示 */
     }
 }
 
@@ -4746,15 +4748,15 @@ function scrollToForm() {
                 </button>
                 
                 <button class="mode-btn mode-btn-cancel" onclick="closeEditModeModal()">
-		<!-- 手機端懸浮新增按鈕 -->
-		<button class="floating-add-btn" id="floatingAddBtn" onclick="scrollToForm()">
-  		  +
-		</button>
-                    ❌ 取消
+                   ❌ 取消
                 </button>
             </div>
         </div>
     </div>
-
+		<!-- 手機端懸浮新增按鈕 -->
+		<button class="floating-add-btn" id="floatingAddBtn" onclick="scrollToForm()">
+  		  +
+		</button>
+ 
 </body>
 </html>

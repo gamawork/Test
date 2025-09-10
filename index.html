@@ -1595,7 +1595,7 @@
             <span class="close">&times;</span>
             <h3>預約成功！</h3>
             <div class="modal-message" id="modalMessage"></div>
-            <button class="btn" onclick="closeModal()">確認</button>
+            
         </div>
     </div>
 
@@ -2893,70 +2893,66 @@ function setTimeSelectValue(selectId, timeValue) {
             }
         }
         // 刪除預約 (新版本 - 支援非同步週期偵測)
-        async function deleteBooking(bookingId, event) {
-            // 防止事件冒泡
-            if (event) {
-                event.stopPropagation();
-            }
-            
-            if (!supabaseClient) {
-                showModal('未連接', '資料庫連線尚未建立');
-                return;
-            }
-            
-            // 找到要刪除的預約
-            const targetBooking = bookings.find(b => b.id === bookingId);
-            if (!targetBooking) {
-                showModal('錯誤', '找不到要刪除的預約');
-                return;
-            }
+// 刪除預約 (修正語法錯誤版本)
+async function deleteBooking(bookingId, event) {
+    // 防止事件冒泡
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    if (!supabaseClient) {
+        showModal('未連接', '資料庫連線尚未建立');
+        return;
+    }
+    
+    // 找到要刪除的預約
+    const targetBooking = bookings.find(b => b.id === bookingId);
+    if (!targetBooking) {
+        showModal('錯誤', '找不到要刪除的預約');
+        return;
+    }
 
-            // 顯示載入狀態
-            const deleteBtn = event?.target;
-            const originalText = deleteBtn?.textContent;
-            if (deleteBtn) {
-                deleteBtn.disabled = true;
-                deleteBtn.textContent = '確認';
-                deleteBtn.style.opacity = '0.6';
-            }
+    // 顯示載入狀態
+    const deleteBtn = event?.target;
+    const originalText = deleteBtn?.textContent;
+    if (deleteBtn) {
+        deleteBtn.disabled = true;
+        deleteBtn.textContent = '檢測中...';
+        deleteBtn.style.opacity = '0.6';
+    }
 
-            try {
-                // 偵測是否為週期預約 (非同步)
-                const recurringInfo = await detectRecurringBookings(targetBooking);
-                
-                // 恢復按鈕狀態
-                if (deleteBtn) {
-                    deleteBtn.disabled = false;
-                    deleteBtn.textContent = originalText;
-                    deleteBtn.style.opacity = '1';
-                }
-                
-                if (recurringInfo.isRecurring) {
-                    // 顯示週期刪除確認對話框
-                    showRecurringDeleteModal(targetBooking, recurringInfo);
-                } else {
-                    // 普通預約，直接確認刪除
-                    if (confirm('確定要刪除這個預約嗎？')) {
-                        await performDelete([bookingId], deleteBtn);
-                    }
-                }
-            } catch (error) {
-                console.error('偵測週期預約時發生錯誤:', error);
-                
-                // 恢復按鈕狀態
-                if (deleteBtn) {
-                    deleteBtn.disabled = false;
-                    deleteBtn.textContent = originalText;
-                    deleteBtn.style.opacity = '1';
-                }
-                
-                // 如果偵測失敗，回到普通刪除流程
-                if (confirm('偵測週期預約失敗，是否直接刪除此預約？')) {
-                    await performDelete([bookingId], deleteBtn);
-                }
-            }
+    try {
+        // 偵測是否為週期預約 (非同步)
+        const recurringInfo = await detectRecurringBookings(targetBooking);
+        
+        // 恢復按鈕狀態
+        if (deleteBtn) {
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = originalText;
+            deleteBtn.style.opacity = '1';
         }
-
+        
+        if (recurringInfo.isRecurring) {
+            // 顯示週期刪除確認對話框
+            showRecurringDeleteModal(targetBooking, recurringInfo);
+        } else {
+            // 普通預約，顯示詳細資訊確認對話框
+            showDetailedDeleteConfirm(targetBooking);
+        }
+    } catch (error) {
+        console.error('偵測週期預約時發生錯誤:', error);
+        
+        // 恢復按鈕狀態
+        if (deleteBtn) {
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = originalText;
+            deleteBtn.style.opacity = '1';
+        }
+        
+        // 如果偵測失敗，顯示詳細資訊確認對話框
+        showDetailedDeleteConfirm(targetBooking);
+    }
+}
         
 // 顯示週期刪除確認模態框
 function showRecurringDeleteModal(targetBooking, recurringInfo) {
@@ -3594,6 +3590,20 @@ function generateICSRRULE(recurringInfo) {
             document.getElementById('recurringDeleteModal').style.display = 'none';
             pendingDeleteBooking = null;
         }
+// 顯示詳細刪除確認對話框
+function showDetailedDeleteConfirm(booking) {
+    const message = `
+        <strong>會議主題：</strong>${booking.title || '無標題'}<br>
+        <strong>時間：</strong>${booking.date} ${formatTimeDisplay(booking.startTime)}-${formatTimeDisplay(booking.endTime)}<br>
+        <strong>地點：</strong>${booking.room || '未知'}<br>
+        <strong>登記者：</strong>${booking.organizer || '未知'}
+    `;
+    
+    showModal('會議詳情', message, () => {
+        // 確認刪除回調
+        performDelete([booking.id]);
+    });
+}
 
         // 預約提交函數
         // 衝突檢查（即時查詢資料庫）
@@ -4497,13 +4507,79 @@ async function updateBooking() {
       	  }
    	 }, duration);
 	}
-        // 模態框函數
-        function showModal(title, message) {
-            document.querySelector('#bookingModal h3').textContent = title;
-            document.getElementById('modalMessage').innerHTML = message;
-            document.getElementById('bookingModal').style.display = 'block';
-        }
-
+// 模態框函數
+function showModal(title, message, onConfirm = null) {
+    const modal = document.getElementById('bookingModal');
+    const modalTitle = document.querySelector('#bookingModal h3');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalContent = document.querySelector('#bookingModal .modal-content');
+    
+    modalTitle.textContent = title;
+    modalMessage.innerHTML = message;
+    
+    // 移除舊的按鈕
+    const oldButtons = modalContent.querySelectorAll('.modal-buttons');
+    oldButtons.forEach(btn => btn.remove());
+    
+    // 創建按鈕容器
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'modal-buttons';
+    buttonContainer.style.cssText = `
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        justify-content: center;
+    `;
+    
+    if (onConfirm) {
+        // 有確認回調時，顯示確定和取消按鈕
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = '取消';
+        cancelBtn.style.cssText = `
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            min-width: 80px;
+        `;
+        cancelBtn.onclick = closeModal;
+        
+        const confirmBtn = document.createElement('button');
+        confirmBtn.textContent = '刪除';
+        confirmBtn.style.cssText = `
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            min-width: 80px;
+        `;
+        confirmBtn.onclick = () => {
+            closeModal();
+            onConfirm();
+        };
+        
+        buttonContainer.appendChild(cancelBtn);
+        buttonContainer.appendChild(confirmBtn);
+    } else {
+        // 沒有確認回調時，只顯示確認按鈕
+        const okBtn = document.createElement('button');
+        okBtn.textContent = '確認';
+        okBtn.className = 'btn';
+        okBtn.onclick = closeModal;
+        buttonContainer.appendChild(okBtn);
+    }
+    
+    modalContent.appendChild(buttonContainer);
+    modal.style.display = 'block';
+}
         function closeModal() {
             document.getElementById('bookingModal').style.display = 'none';
         }
@@ -4819,25 +4895,6 @@ function scrollToForm() {
 
         // 頁面載入完成後初始化
         document.addEventListener('DOMContentLoaded', initialize);  
-// 暫時加入這段代碼檢查按鈕狀態
-function checkButtonStatus() {
-    const btn = document.getElementById('floatingAddBtn');
-    if (btn) {
-        const styles = getComputedStyle(btn);
-        alert(`
-Position: ${styles.position}
-Bottom: ${styles.bottom}  
-Right: ${styles.right}
-Display: ${styles.display}
-Z-index: ${styles.zIndex}
-        `);
-    } else {
-        alert('按鈕不存在');
-    }
-}
-
-// 3秒後自動檢查
-setTimeout(checkButtonStatus, 3000);
   
 
 </script>

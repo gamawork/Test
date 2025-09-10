@@ -4819,7 +4819,29 @@ function scrollToForm() {
         }
 
         // 頁面載入完成後初始化
-        document.addEventListener('DOMContentLoaded', initialize);    </script>
+        document.addEventListener('DOMContentLoaded', initialize);  
+// 暫時加入這段代碼檢查按鈕狀態
+function checkButtonStatus() {
+    const btn = document.getElementById('floatingAddBtn');
+    if (btn) {
+        const styles = getComputedStyle(btn);
+        alert(`
+Position: ${styles.position}
+Bottom: ${styles.bottom}  
+Right: ${styles.right}
+Display: ${styles.display}
+Z-index: ${styles.zIndex}
+        `);
+    } else {
+        alert('按鈕不存在');
+    }
+}
+
+// 3秒後自動檢查
+setTimeout(checkButtonStatus, 3000);
+  
+
+</script>
 
 <!-- 編輯模式選擇模態框 -->
     <div id="editModeModal" class="edit-mode-modal">
@@ -4846,7 +4868,6 @@ function scrollToForm() {
                 </button>
             </div>
         </div>
-<button style="position: fixed; bottom: 20px; right: 20px; z-index: 999999;">測試</button>
     </div>
 		<!-- 手機端懸浮新增按鈕 -->
 		<button class="floating-add-btn" id="floatingAddBtn" onclick="scrollToForm()">

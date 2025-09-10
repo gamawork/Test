@@ -88,16 +88,15 @@
 
         .main-content {
             display: grid;
-            grid-template-columns: 300px 1fr;
+            grid-template-columns: 1fr 300px;
             min-height: 600px;
         }
 
-        .sidebar {
-            background: #f8f9fe;
-            padding: 30px 20px;
-            border-right: 1px solid #e1e5e9;
-        }
-
+	.sidebar {
+  	  background: #f8f9fe;
+   	 padding: 30px 20px;
+   	 border-left: 1px solid #e1e5e9;  /* 修改：從 border-right 改為 border-left */
+	}
         .booking-form {
             background: white;
             padding: 20px;
@@ -894,20 +893,22 @@
             display: none !important;
         }
 
-        @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .sidebar {
-                border-right: none;
-                border-bottom: 1px solid #e1e5e9;
-            }
-
-            .schedule-area {
-                padding: 20px;
-            }
-        }
+       @media (max-width: 1024px) {
+    	.main-content {
+       	 grid-template-columns: 1fr;
+   	 }
+    
+   	 .sidebar {
+       		 border-left: none;                  /* 修改：移除左邊框 */
+       		 border-top: 1px solid #e1e5e9;      /* 修改：改為上邊框 */
+       	 order: 2;                            	     /* 新增：在小螢幕時表單在下方 */
+    	}
+    
+    	.schedule-area {
+      	  padding: 20px;
+       	  order: 1;                            /* 新增：在小螢幕時表格在上方 */
+   	 }
+	}
 
         /* 手機響應式優化 */
         @media (max-width: 480px) {
@@ -1378,6 +1379,59 @@
     transform: none;
     box-shadow: none;
 }
+/* 手機端懸浮新增按鈕 */
+.floating-add-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #2d4874 0%, #1a2e4a 100%);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 28px;
+    font-weight: 300;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(45, 72, 116, 0.4);
+    z-index: 1001;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    line-height: 1;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.floating-add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(45, 72, 116, 0.5);
+}
+
+.floating-add-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(45, 72, 116, 0.3);
+}
+
+/* 只在手機端顯示 */
+@media (max-width: 768px) {
+    .floating-add-btn {
+        display: flex;
+    }
+}
+
+/* 超小螢幕調整 */
+@media (max-width: 480px) {
+    .floating-add-btn {
+        bottom: 15px;
+        right: 15px;
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+    }
+}
+
 </style>
 </head>
 <body>
@@ -1386,7 +1440,44 @@
             <h1>Gama 會議室預約系統</h1>
         </div>
 
-        <div class="main-content">
+<div class="main-content">
+            <div class="schedule-area">
+                <div class="schedule-header">
+                    <div class="date-nav">
+                        <button onclick="changeWeek(-1)">◀</button>
+                        <div class="current-week" id="currentWeek">本週</div>
+                        <button onclick="changeWeek(1)">▶</button>
+                        <button class="today-btn" id="todayBtn" onclick="goToToday()">回到本週</button>
+                    </div>
+                </div>
+
+                <div class="table-container" style="position: relative;">
+                    <div class="loading-overlay" id="loadingOverlay">
+                        <div class="loading-content">
+                            <div class="loading-spinner"></div>
+                            <div class="loading-text">載入中...</div>
+                        </div>
+                    </div>
+
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th width="60">日期</th>
+                                <th width="60">星期</th>
+                                <th width="110">時間</th>
+                                <th width="100">會議地點</th>
+                                <th width="80">登記者</th>
+                                <th width="350">會議主題</th>
+                                <th width="200">動作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleBody">
+                            <!-- 動態生成內容 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="sidebar">
                 <div class="booking-form">
                     <h3 style="margin-bottom: 20px; color: #2d3748;">新增預約</h3>
@@ -1446,11 +1537,11 @@
                         
                         <div class="form-group" id="recurringOptions" style="display: none;">
                             <label for="recurringType">重複頻率</label>
-				<select id="recurringType">
-   				 <option value="weekly">每週</option>
-   				 <option value="biweekly">每雙週</option>
-    					<option value="monthly">每月 (每月第幾個週幾)</option>
-				</select>
+                            <select id="recurringType">
+                                <option value="weekly">每週</option>
+                                <option value="biweekly">每雙週</option>
+                                <option value="monthly">每月 (每月第幾個週幾)</option>
+                            </select>
                         </div>
                         
                         <div class="form-group" id="monthlyModeOption" style="display: none;">
@@ -1470,46 +1561,7 @@
                     </div>
                 </div>
             </div>
-
-            <div class="schedule-area">
-                <div class="schedule-header">
-                                            <div class="date-nav">
-                        <button onclick="changeWeek(-1)">◀</button>
-                        <div class="current-week" id="currentWeek">本週</div>
-                        <button onclick="changeWeek(1)">▶</button>
-                        <button class="today-btn" id="todayBtn" onclick="goToToday()">回到本週</button>
-                    </div>
-                </div>
-
-                <div class="table-container" style="position: relative;">
-                    <div class="loading-overlay" id="loadingOverlay">
-                        <div class="loading-content">
-                            <div class="loading-spinner"></div>
-                            <div class="loading-text">載入中...</div>
-                        </div>
-                    </div>
-
-                    <table class="schedule-table">
-                        <thead>
-                            <tr>
-                                <th width="60">日期</th>
-                                <th width="60">星期</th>
-                                <th width="110">時間</th>
-                                <th width="100">會議地點</th>
-                                <th width="80">登記者</th>
-                                <th width="350">會議主題</th>
-                                <th width="200">動作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="scheduleBody">
-                            <!-- 動態生成內容 -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
-    </div>
-
     <!-- Modal -->
     <div id="bookingModal" class="modal">
         <div class="modal-content">
@@ -4608,6 +4660,40 @@ async function updateBooking() {
             }
         }
 
+// 手機端懸浮按鈕滾動到表單功能
+function scrollToForm() {
+    // 如果正在編輯模式，先取消編輯
+    if (isEditMode) {
+        console.log('取消編輯模式以開始新預約');
+        cancelEdit();
+    }
+    
+    // 確保表單為新增模式
+    resetForm();
+    
+    // 滾動到表單區域
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        sidebar.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+        
+        // 延遲聚焦到第一個輸入框
+        setTimeout(() => {
+            const firstInput = document.getElementById('meetingTitle');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }, 500);
+    }
+    
+    // 提供視覺反饋
+    showNotification('請填寫預約資訊', 'info', 2000);
+    
+    console.log('懸浮按鈕觸發：滾動到表單區域');
+}
+
         // 初始化函數
         function initialize() {
             console.log('開始初始化系統...');
@@ -4660,6 +4746,10 @@ async function updateBooking() {
                 </button>
                 
                 <button class="mode-btn mode-btn-cancel" onclick="closeEditModeModal()">
+		<!-- 手機端懸浮新增按鈕 -->
+		<button class="floating-add-btn" id="floatingAddBtn" onclick="scrollToForm()">
+  		  +
+		</button>
                     ❌ 取消
                 </button>
             </div>

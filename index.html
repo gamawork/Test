@@ -1353,6 +1353,31 @@
     background: #5a6268;
     transform: translateY(-1px);
 }
+.copy-btn {
+    background: #d2b48c;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-right: 5px;
+}
+
+.copy-btn:hover:not(:disabled) {
+    background: #bc9a6a;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(210, 180, 140, 0.4);
+}
+
+.copy-btn:disabled {
+    cursor: not-allowed;
+    background: #6c757d;
+    transform: none;
+    box-shadow: none;
+}
 </style>
 </head>
 <body>
@@ -1469,11 +1494,11 @@
                             <tr>
                                 <th width="60">日期</th>
                                 <th width="60">星期</th>
-                                <th width="120">時間</th>
+                                <th width="110">時間</th>
                                 <th width="100">會議地點</th>
                                 <th width="80">登記者</th>
-                                <th width="360">會議主題</th>
-                                <th width="180">動作</th>
+                                <th width="350">會議主題</th>
+                                <th width="200">動作</th>
                             </tr>
                         </thead>
                         <tbody id="scheduleBody">
@@ -1683,9 +1708,81 @@
     pendingEditBooking = null;
 }
 
+// 複製預約功能
+// 複製預約功能
+function copyBooking(bookingId, event) {
+    // 防止事件冒泡
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    // 找到要複製的預約
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) {
+        showNotification('找不到要複製的預約資料', 'warning');
+        return;
+    }
+    
+    // 如果正在編輯模式，先取消編輯
+    if (isEditMode) {
+        console.log('取消編輯模式以進行複製');
+        cancelEdit();
+    }
+    
+    // 確保表單處於新增模式
+    resetForm();
+    
+    // 填入除了日期外的所有資料
+    document.getElementById('meetingTitle').value = booking.title || '';
+    document.getElementById('meetingRoom').value = booking.room || '';
+    document.getElementById('organizer').value = booking.organizer || '';
+    
+    // 設定時間選項（重用現有函數）
+    setTimeSelectValue('startTime', booking.startTime);
+    setTimeSelectValue('endTime', booking.endTime);
+    
+    // 確保日期欄位為空並更新顯示
+    document.getElementById('meetingDate').value = '';
+    updateDateDisplay();
+    
+    // 確保週期預約未勾選（單次模式）
+    const recurringCheckbox = document.getElementById('recurringBooking');
+    if (recurringCheckbox) {
+        recurringCheckbox.checked = false;
+        // 隱藏週期選項
+        const recurringOptions = document.getElementById('recurringOptions');
+        const recurringPeriod = document.getElementById('recurringPeriod');
+        const monthlyModeOption = document.getElementById('monthlyModeOption');
+        if (recurringOptions) recurringOptions.style.display = 'none';
+        if (recurringPeriod) recurringPeriod.style.display = 'none';
+        if (monthlyModeOption) monthlyModeOption.style.display = 'none';
+    }
+    
+    // 確保表單標題和按鈕正確
+    const submitBtn = document.getElementById('submitBtn');
+    const formTitle = document.querySelector('.booking-form h3');
+    if (submitBtn) submitBtn.textContent = '確認預約';
+    if (formTitle) formTitle.textContent = '新增預約';
+    
+    // 顯示成功提示
+    showNotification('預約內容已複製，請選擇新的日期', 'success');
+    
+    // 滾動到表單區域
+    document.querySelector('.sidebar').scrollIntoView({ behavior: 'smooth' });
+    
+    console.log('預約複製完成:', {
+        originalId: bookingId,
+        title: booking.title,
+        room: booking.room,
+        time: `${booking.startTime}-${booking.endTime}`,
+        organizer: booking.organizer
+    });
+}
+
+
+
         // 開啟編輯表單
 
-// 取消編輯函數 - 修正版
 function cancelEdit() {
     console.log('取消編輯模式');
     
@@ -2399,24 +2496,25 @@ function setTimeSelectValue(selectId, timeValue) {
                                 <div class="meeting-title">${booking.title || '無標題'}</div>
                             </td>
                             <td class="action-cell">
-                                <div class="action-buttons">
-                                    <div class="calendar-dropdown">
-                                        <button class="calendar-btn-dropdown" onclick="toggleCalendarMenu(event, '${booking.id}')">
-                                            日曆 ▼
-                                        </button>
-                                        <div class="calendar-menu" id="menu-${booking.id}">
-                                            <div class="calendar-option" onclick="addToGoogleCalendar('${booking.id}')">
-                                                Google 日曆
-                                            </div>
-                                            <div class="calendar-option" onclick="addToAppleCalendar('${booking.id}')">
-                                                Apple & Outlook 日曆
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button class="edit-btn" onclick="editBooking('${booking.id}', event)">編輯</button>
-			            <button class="delete-btn" onclick="deleteBooking('${booking.id}', event)">刪除</button>
-                                </div>
-                            </td>
+    				<div class="action-buttons">
+        			<div class="calendar-dropdown">
+           			 <button class="calendar-btn-dropdown" onclick="toggleCalendarMenu(event, '${booking.id}')">
+              			  日曆 ▼
+           			 </button>
+           			 <div class="calendar-menu" id="menu-${booking.id}">
+             			   <div class="calendar-option" onclick="addToGoogleCalendar('${booking.id}')">
+                		 Google 日曆
+               			 </div>
+               			 <div class="calendar-option" onclick="addToAppleCalendar('${booking.id}')">
+                   		 Apple & Outlook 日曆
+                		 </div>
+           			 </div>
+       				 </div>
+        			<button class="copy-btn" onclick="copyBooking('${booking.id}', event)">複製</button>
+        			<button class="edit-btn" onclick="editBooking('${booking.id}', event)">編輯</button>
+        			<button class="delete-btn" onclick="deleteBooking('${booking.id}', event)">刪除</button>
+   			   </div>
+			   </td>
                         `;
                         scheduleBody.appendChild(row);
                     });
@@ -4275,29 +4373,51 @@ async function updateBooking() {
             }
         }
 
-        // 通知函數
-        function showNotification(message) {
-            // 簡單的通知實作
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: #28a745;
-                color: white;
-                padding: 15px 20px;
-                border-radius: 5px;
-                z-index: 2000;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            `;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
+        
+	// 通知函數 - 支持不同類型
+	function showNotification(message, type = 'success', duration = 3000) {
+    	const notification = document.createElement('div');
+   	 notification.style.cssText = `
+       	 position: fixed;
+       	 top: 20px;
+       	 right: 20px;
+      	  padding: 15px 20px;
+       	 border-radius: 5px;
+       	 z-index: 2000;
+       	 box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      	  max-width: 300px;
+       	 font-size: 14px;
+       	 line-height: 1.4;
+   	 `;
+    
+   	 // 根據類型設定顏色
+   	 switch(type) {
+       	 case 'success':
+           	 notification.style.background = '#28a745';
+           	 notification.style.color = 'white';
+           	 break;
+       	 case 'warning':
+           	 notification.style.background = '#ffc107';
+           	 notification.style.color = '#212529';
+           	 break;
+         case 'info':
+            	notification.style.background = '#17a2b8';
+            	notification.style.color = 'white';
+           	 break;
+        	default:
+           	 notification.style.background = '#28a745';
+           	 notification.style.color = 'white';
+    	}
+    
+   	 notification.textContent = message;
+   	 document.body.appendChild(notification);
+    
+    	setTimeout(() => {
+      	  if (notification.parentNode) {
+      	      notification.remove();
+      	  }
+   	 }, duration);
+	}
         // 模態框函數
         function showModal(title, message) {
             document.querySelector('#bookingModal h3').textContent = title;

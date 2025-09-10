@@ -1379,11 +1379,14 @@
     transform: none;
     box-shadow: none;
 }
-/* 手機端懸浮新增按鈕 */
+/* 手機端懸浮新增按鈕 - 強化版 修正常駐右下角*/
 .floating-add-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
+    /* 關鍵：使用 fixed 定位確保相對於視窗 */
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    
+    /* 尺寸和外觀 */
     width: 56px;
     height: 56px;
     background: linear-gradient(135deg, #2d4874 0%, #1a2e4a 100%);
@@ -1392,48 +1395,69 @@
     color: white;
     font-size: 28px;
     font-weight: 300;
-    cursor: pointer;
-    box-shadow: 0 4px 16px rgba(45, 72, 116, 0.4);
-    z-index: 9999; /* 提高層級 */
-    display: none; /* 預設隱藏 */
+    
+    /* 層級和顯示 */
+    z-index: 99999 !important; /* 超高層級 */
+    display: none;
+    
+    /* 佈局 */
     align-items: center;
     justify-content: center;
+    
+    /* 互動效果 */
+    cursor: pointer;
     transition: all 0.3s ease;
-    line-height: 1;
-    user-select: none;
+    box-shadow: 0 4px 16px rgba(45, 72, 116, 0.6);
+    
+    /* 手機優化 */
     -webkit-tap-highlight-color: transparent;
-    /* 強制顯示在最上層 */
+    user-select: none;
     pointer-events: auto;
+    
+    /* 強制脫離文檔流 */
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: translateZ(0); /* 強制硬體加速 */
 }
 
-.floating-add-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(45, 72, 116, 0.5);
+.floating-add-btn:hover,
+.floating-add-btn:focus {
+    transform: translateY(-2px) translateZ(0);
+    box-shadow: 0 6px 20px rgba(45, 72, 116, 0.7);
 }
 
 .floating-add-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(45, 72, 116, 0.3);
+    transform: translateY(0) translateZ(0);
+    box-shadow: 0 2px 8px rgba(45, 72, 116, 0.5);
 }
 
-/* 在手機端強制顯示 */
+/* 手機端強制顯示 */
 @media (max-width: 768px) {
     .floating-add-btn {
-        display: flex !important; /* 強制顯示 */
+        display: flex !important;
     }
 }
 
-/* 超小螢幕調整 */
+/* iPhone 等高解析度設備優化 */
 @media (max-width: 480px) {
     .floating-add-btn {
-        bottom: 15px;
-        right: 15px;
+        bottom: 15px !important;
+        right: 15px !important;
         width: 50px;
         height: 50px;
         font-size: 24px;
     }
 }
 
+/* 針對 iOS Safari 的特殊處理 */
+@supports (-webkit-touch-callout: none) {
+    .floating-add-btn {
+        /* iOS 特殊優化 */
+        -webkit-transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+}
 </style>
 </head>
 <body>
@@ -4725,6 +4749,27 @@ function scrollToForm() {
                 realtimeSubscription.unsubscribe();
             }
         });
+
+// 在 initialize() 函數的最後添加
+function ensureFloatingButton() {
+    const button = document.getElementById('floatingAddBtn');
+    if (button) {
+        // 強制檢查是否為手機設備
+        const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+            button.style.display = 'flex';
+            button.style.position = 'fixed';
+            button.style.zIndex = '99999';
+            console.log('懸浮按鈕已強制顯示');
+        }
+    }
+}
+
+// 在頁面載入和視窗大小改變時檢查
+window.addEventListener('load', ensureFloatingButton);
+window.addEventListener('resize', ensureFloatingButton);
+
     </script>
 
 <!-- 編輯模式選擇模態框 -->

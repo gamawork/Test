@@ -1862,44 +1862,6 @@ function copyBooking(bookingId, event) {
 
         // 開啟編輯表單
 
-function cancelEdit() {
-    console.log('取消編輯模式');
-    
-    // 清理編輯狀態
-    currentEditingBooking = null;
-    isEditMode = false;
-    editMode = 'single';
-    futureBookingsToEdit = [];
-    
-    // 恢復週期預約勾選框狀態
-    const recurringCheckbox = document.getElementById('recurringBooking');
-    const checkboxGroup = recurringCheckbox?.closest('.checkbox-group');
-    
-    if (recurringCheckbox && checkboxGroup) {
-        recurringCheckbox.disabled = false;
-        checkboxGroup.classList.remove('disabled');
-        
-        const notice = checkboxGroup.querySelector('.edit-mode-notice');
-        if (notice) notice.remove();
-    }
-    
-    // 重設表單和 UI
-    resetForm();
-    
-    const submitBtn = document.getElementById('submitBtn');
-    const formTitle = document.querySelector('.booking-form h3');
-    
-    if (submitBtn) {
-        submitBtn.textContent = '確認預約';
-        submitBtn.disabled = false;
-    }
-    if (formTitle) {
-        formTitle.innerHTML = '新增預約';
-    }
-    
-    console.log('已恢復為新增預約模式');
-}
-
 
 function openEditForm(booking, mode = 'single', futureBookings = []) {
     console.log('開啟編輯表單:', { booking, mode, futureBookings });
@@ -2430,19 +2392,7 @@ function updateRecurringPeriodOptions() {
         }
 
         // 固定日期計算 (智慧調整)
-        function calculateFixedDate(baseDate, monthsToAdd) {
-            const originalDay = baseDate.getDate();
-            const targetDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + monthsToAdd, 1);
-            
-            // 取得目標月份的最後一天
-            const lastDayOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
-            
-            // 如果原日期超過該月天數，調整到月末
-            const finalDay = Math.min(originalDay, lastDayOfMonth);
-            targetDate.setDate(finalDay);
-            
-            return targetDate;
-        }
+
         function formatDate(date) {
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -2465,16 +2415,6 @@ function updateRecurringPeriodOptions() {
             return dates;
         }
 
-        function generateTimeOptions() {
-            const times = [];
-            for (let hour = 9; hour <= 18; hour++) {
-                times.push(`${String(hour).padStart(2, '0')}:00`);
-                if (hour < 18) {
-                    times.push(`${String(hour).padStart(2, '0')}:30`);
-                }
-            }
-            return times;
-        }
 
 // 設定時間選擇器的值，如果選項不存在則動態添加
 function setTimeSelectValue(selectId, timeValue) {
